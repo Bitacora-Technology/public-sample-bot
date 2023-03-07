@@ -1,3 +1,5 @@
-# Discord Bot Template
+# Public Sample Bot
 
-This is the base from which all our projects start. If you want to code a Discord bot using Python, we recommend using this template. Make sure you know how cogs work before starting.
+This is a public bot developed by [Bitacora](https://bitacora.gg) to show what we are capable of doing.
+
+## Features:
