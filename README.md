@@ -12,3 +12,4 @@ This is a public bot developed by [Bitacora](https://bitacora.gg) to show what w
  - [ ] Embeds
  - [ ] Welcome
  - [ ] Roles
+ - [ ] Games
