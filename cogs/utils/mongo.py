@@ -19,10 +19,10 @@ class User:
     async def check(self) -> dict:
         user_info = await self.find()
         if not user_info:
-            await self.find()
+            await self.new()
             user_info = await self.find()
         return user_info
 
     async def update(self, query: dict, method: str = 'set') -> None:
-        update_query = {method: query}
+        update_query = {f'${method}': query}
         await self.users.update_one(self.filter, update_query, upsert=True)
