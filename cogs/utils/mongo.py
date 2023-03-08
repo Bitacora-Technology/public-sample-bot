@@ -6,7 +6,7 @@ db = client['public-sample']
 
 
 class User:
-    def __init__(self, user: int) -> None:
+    def __init__(self, user: int = 0) -> None:
         self.users = db['users']
         self.filter = {'_id': user}
 
@@ -26,3 +26,6 @@ class User:
     async def update(self, query: dict, method: str = 'set') -> None:
         update_query = {f'${method}': query}
         await self.users.update_one(self.filter, update_query, upsert=True)
+
+    def cursor(self) -> motor.AsyncIOMotorCursor:
+        return self.users.find()
