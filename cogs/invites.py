@@ -9,6 +9,21 @@ import discord
 class Invites(commands.GroupCog, group_name='invites'):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
+        self.invites = {}
+
+    async def check_global_invites(self) -> None:
+        for guild in self.bot.guilds:
+            guild_dict = {}
+            guild_id = str(guild.id)
+            invite_list = await guild.invites()
+            for invite in invite_list:
+                guild_dict[invite.url] = invite.uses
+            self.invites[guild_id] = guild_dict
+
+    @commands.GroupCog.listener()
+    async def on_ready(self) -> None:
+        await self.bot.wait_until_ready()
+        await self.check_global_invites()
 
     @app_commands.command()
     async def create(self, interaction: discord.Interaction) -> None:
@@ -37,9 +52,52 @@ class Invites(commands.GroupCog, group_name='invites'):
         user_invite = create_result.url
         query = {f'invites.{guild_id}.url': user_invite}
         await user.update(query)
+        await self.check_global_invites()
 
         content = f'<{user_invite}>'
         await interaction.response.send_message(content, ephemeral=True)
+
+    async def check_guild_invites(
+        self, guild: discord.Guild
+    ) -> tuple[dict, list]:
+        invites = {}
+        invite_list = await guild.invites()
+        for invite in invite_list:
+            invites[invite.url] = invite.uses
+        return invites, invite_list
+
+    @commands.GroupCog.listener()
+    async def on_member_join(self, member: discord.Member):
+        guild_id = str(member.guild.id)
+        guild_invites, invite_list = await self.check_guild_invites(
+            member.guild
+        )
+
+        invite_url = None
+        for key in guild_invites.keys() & self.invites[guild_id].keys():
+            old_value = self.invites[guild_id].get(key, None)
+            new_value = guild_invites.get(key, None)
+            if new_value - 1 == old_value:
+                invite_url = key
+        await self.check_global_invites()
+
+        if invite_url is None:
+            return
+
+        invited_by = None
+        user_cursor = mongo.User().cursor()
+        async for user_info in user_cursor:
+            guild_dict = user_info.get('invites', {})
+            guild_info = guild_dict.get(guild_id, {})
+            user_invite = guild_info.get('url', None)
+            if user_invite == invite_url:
+                invited_by = user_info['_id']
+
+        if invited_by is None:
+            return
+
+        user = mongo.User(invited_by)
+        await user.update({f'invites.{guild_id}.count': 1}, method='inc')
 
 
 async def setup(bot: Bot) -> None:
