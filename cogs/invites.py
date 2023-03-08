@@ -29,8 +29,7 @@ class Invites(commands.GroupCog, group_name='invites'):
         embed = discord.Embed(
             title=title,
             description=description,
-            color=self.bot.color,
-            timestamp=discord.utils.utcnow()
+            color=self.bot.color
         )
         embed.set_footer(
             text='https://bitacora.gg', icon_url=self.bot.user.avatar
