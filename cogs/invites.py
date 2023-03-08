@@ -25,6 +25,18 @@ class Invites(commands.GroupCog, group_name='invites'):
         await self.bot.wait_until_ready()
         await self.check_global_invites()
 
+    def simple_embed(self, title: str, description: str) -> discord.Embed:
+        embed = discord.Embed(
+            title=title,
+            description=description,
+            color=self.bot.color,
+            timestamp=discord.utils.utcnow()
+        )
+        embed.set_footer(
+            text='https://bitacora.gg', icon_url=self.bot.user.avatar
+        )
+        return embed
+
     @app_commands.command()
     async def create(self, interaction: discord.Interaction) -> None:
         """Get your own server invite"""
@@ -42,9 +54,11 @@ class Invites(commands.GroupCog, group_name='invites'):
             invite_list = await interaction.guild.invites()
             invite_exists = discord.utils.get(invite_list, url=user_invite)
             if bool(invite_exists) is True:
+                title = 'Invite'
                 content = f'<{user_invite}>'
+                embed = self.simple_embed(title, content)
                 await interaction.response.send_message(
-                    content, ephemeral=True
+                    embed=embed, ephemeral=True
                 )
                 return
 
@@ -54,8 +68,10 @@ class Invites(commands.GroupCog, group_name='invites'):
         await user.update(query)
         await self.check_global_invites()
 
+        title = 'Invite'
         content = f'<{user_invite}>'
-        await interaction.response.send_message(content, ephemeral=True)
+        embed = self.simple_embed(title, content)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command()
     async def stats(self, interaction: discord.Interaction) -> None:
@@ -74,8 +90,11 @@ class Invites(commands.GroupCog, group_name='invites'):
             users = 'user'
         else:
             users = 'users'
+
+        title = 'Stats'
         content = f'You have invited {invite_count} {users}'
-        await interaction.response.send_message(content, ephemeral=True)
+        embed = self.simple_embed(title, content)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     async def check_guild_invites(
         self, guild: discord.Guild
