@@ -23,7 +23,7 @@ class Invites(commands.GroupCog, group_name='invites'):
         guild_info = guild_dict.get(guild_id, {})
         user_invite = guild_info.get('url', None)
 
-        if user_invite is not None:
+        if bool(user_invite) is True:
             invite_list = await interaction.guild.invites()
             invite_exists = discord.utils.get(invite_list, url=user_invite)
             if bool(invite_exists) is True:
