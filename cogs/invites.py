@@ -57,6 +57,26 @@ class Invites(commands.GroupCog, group_name='invites'):
         content = f'<{user_invite}>'
         await interaction.response.send_message(content, ephemeral=True)
 
+    @app_commands.command()
+    async def stats(self, interaction: discord.Interaction) -> None:
+        """Check how many users you invited"""
+        user_id = interaction.user.id
+        guild_id = str(interaction.guild_id)
+
+        user = mongo.User(user_id)
+        user_info = await user.check()
+
+        guild_dict = user_info.get('invites', {})
+        guild_info = guild_dict.get(guild_id, {})
+        invite_count = guild_info.get('count', 0)
+
+        if invite_count == 1:
+            users = 'user'
+        else:
+            users = 'users'
+        content = f'You have invited {invite_count} {users}'
+        await interaction.response.send_message(content, ephemeral=True)
+
     async def check_guild_invites(
         self, guild: discord.Guild
     ) -> tuple[dict, list]:
