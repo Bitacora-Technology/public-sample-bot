@@ -40,6 +40,10 @@ class Bot(commands.Bot):
     def owner(self) -> discord.User:
         return self.bot_app_info.owner
 
+    @property
+    def color(self) -> int:
+        return 12718096
+
     async def on_ready(self) -> None:
         if not hasattr(self, 'uptime'):
             self.uptime = discord.utils.utcnow()
