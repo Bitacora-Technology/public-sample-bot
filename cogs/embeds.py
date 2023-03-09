@@ -90,8 +90,13 @@ class ManageThumbnailButton(discord.ui.Button):
 
 class SendEmbedButton(discord.ui.Button):
     def __init__(self, embed_info: dict) -> None:
-        super().__init__(label='Send embed', style=discord.ButtonStyle.primary)
+        super().__init__(label='Send', style=discord.ButtonStyle.primary)
         self.embed_info = embed_info
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        embed = create_embed(self.embed_info)
+        await interaction.channel.send(embed=embed)
+        await interaction.response.defer()
 
 
 class ConfigureEmbedView(discord.ui.View):
