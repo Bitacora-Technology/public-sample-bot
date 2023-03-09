@@ -11,7 +11,9 @@ def create_embed(embed_info: dict) -> discord.Embed:
         color=embed_info['color']
     )
 
-    embed.set_footer(text='https://bitacora.gg', icon_url=embed_info['avatar'])
+    embed.set_footer(
+        text='https://bitacora.gg', icon_url=embed_info['avatar']
+    )
 
     embed.set_image(url=embed_info['image_url'])
     embed.set_thumbnail(url=embed_info['thumbnail_url'])
@@ -19,7 +21,9 @@ def create_embed(embed_info: dict) -> discord.Embed:
     field_list = embed_info['field_list']
     for field in field_list:
         embed.add_field(
-            name=field['name'], value=field['value'], inline=field['inline']
+            name=field['name'],
+            value=field['value'],
+            inline=False
         )
 
     return embed
@@ -56,12 +60,141 @@ class CreateEmbedModal(discord.ui.Modal):
         )
 
 
+class AddFieldModal(discord.ui.Modal):
+    def __init__(self, embed_info: dict) -> None:
+        super().__init__(title='Add field')
+        self.embed_info = embed_info
+
+    name = discord.ui.TextInput(label='Name', max_length=256)
+
+    value = discord.ui.TextInput(
+        label='Value', style=discord.TextStyle.long, max_length=1024
+    )
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        field = {
+            'name': self.name.value,
+            'value': self.value.value
+        }
+        self.embed_info['field_list'].append(field)
+
+        embed = create_embed(self.embed_info)
+        view = ManageFieldsView(self.embed_info)
+        await interaction.response.edit_message(embed=embed, view=view)
+
+
+class AddFieldButton(discord.ui.Button):
+    def __init__(self, embed_info: dict) -> None:
+        super().__init__(
+            label='Add field', style=discord.ButtonStyle.success
+        )
+        self.embed_info = embed_info
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        modal = AddFieldModal(self.embed_info)
+        await interaction.response.send_modal(modal)
+
+
+class RemoveFieldDropdown(discord.ui.Select):
+    def __init__(self, embed_info: dict) -> None:
+        options = []
+        field_list = embed_info['field_list']
+        count = 0
+        for field in field_list:
+            options.append(
+                discord.SelectOption(
+                    label=field['name'][:100],
+                    description=field['value'][:100],
+                    value=str(count)
+                )
+            )
+            count += 1
+        super().__init__(
+            placeholder='Choose the fields to remove...',
+            min_values=1,
+            max_values=len(field_list),
+            options=options
+        )
+        self.embed_info = embed_info
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        self.values.sort()
+        self.values.reverse()
+        for value in self.values:
+            value = int(value)
+            self.embed_info['field_list'].pop(value)
+
+        embed = create_embed(self.embed_info)
+        view = ManageFieldsView(self.embed_info)
+        await interaction.response.edit_message(embed=embed, view=view)
+
+
+class BackFieldsButton(discord.ui.Button):
+    def __init__(self, embed_info: dict) -> None:
+        super().__init__(label='Go back')
+        self.embed_info = embed_info
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        embed = create_embed(self.embed_info)
+        view = ManageFieldsView(self.embed_info)
+        await interaction.response.edit_message(embed=embed, view=view)
+
+
+class RemoveFieldView(discord.ui.View):
+    def __init__(self, embed_info: dict) -> None:
+        super().__init__(timeout=None)
+        self.add_item(RemoveFieldDropdown(embed_info))
+        self.add_item(BackFieldsButton(embed_info))
+
+
+class RemoveFieldButton(discord.ui.Button):
+    def __init__(self, embed_info: dict) -> None:
+        super().__init__(
+            label='Remove field', style=discord.ButtonStyle.danger
+        )
+        self.embed_info = embed_info
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        field_list = self.embed_info['field_list']
+
+        if len(field_list) == 0:
+            await interaction.response.defer()
+        else:
+            embed = create_embed(self.embed_info)
+            view = RemoveFieldView(self.embed_info)
+            await interaction.response.edit_message(embed=embed, view=view)
+
+
+class BackConfigureButton(discord.ui.Button):
+    def __init__(self, embed_info: dict) -> None:
+        super().__init__(label='Go back')
+        self.embed_info = embed_info
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        embed = create_embed(self.embed_info)
+        view = ConfigureEmbedView(self.embed_info)
+        await interaction.response.edit_message(embed=embed, view=view)
+
+
+class ManageFieldsView(discord.ui.View):
+    def __init__(self, embed_info: dict) -> None:
+        super().__init__(timeout=None)
+        self.add_item(AddFieldButton(embed_info))
+        self.add_item(RemoveFieldButton(embed_info))
+        self.add_item(BackConfigureButton(embed_info))
+
+
 class ManageFieldsButton(discord.ui.Button):
     def __init__(self, embed_info: dict) -> None:
         super().__init__(
             label='Manage fields', style=discord.ButtonStyle.primary
         )
         self.embed_info = embed_info
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        embed = create_embed(self.embed_info)
+        view = ManageFieldsView(self.embed_info)
+        await interaction.response.edit_message(embed=embed, view=view)
 
 
 class AddImageModal(discord.ui.Modal):
