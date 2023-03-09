@@ -37,7 +37,7 @@ class Invites(commands.GroupCog, group_name='invites'):
         return embed
 
     @app_commands.command()
-    async def create(self, interaction: discord.Interaction) -> None:
+    async def get(self, interaction: discord.Interaction) -> None:
         """Get your own server invite"""
         user_id = interaction.user.id
         guild_id = str(interaction.guild_id)

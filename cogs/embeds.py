@@ -324,7 +324,7 @@ class Embeds(commands.GroupCog, group_name='embeds'):
         self.bot = bot
 
     @app_commands.command()
-    async def create(self, interaction: discord.Interaction) -> None:
+    async def send(self, interaction: discord.Interaction) -> None:
         """Send a custom embed"""
         modal = CreateEmbedModal(self.bot)
         await interaction.response.send_modal(modal)
