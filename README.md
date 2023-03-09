@@ -1,6 +1,6 @@
 # Public Sample Bot
 
-This is a public bot developed by [Bitacora](https://bitacora.gg) to show what we are capable of doing.
+This is a public bot developed by [Bitacora](https://bitacora.gg).
 
 ### Features:
 
@@ -9,7 +9,7 @@ This is a public bot developed by [Bitacora](https://bitacora.gg) to show what w
  - [ ] Polls
  - [ ] Reminders
  - [ ] Economy
- - [ ] Embeds
+ - [x] Embeds
  - [ ] Welcome
  - [ ] Roles
  - [ ] Games
