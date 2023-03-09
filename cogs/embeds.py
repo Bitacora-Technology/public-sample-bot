@@ -1,5 +1,6 @@
 from discord.ext import commands
 from discord import app_commands
+from cogs.utils import format
 from bot import Bot
 import discord
 
@@ -8,11 +9,11 @@ def create_embed(embed_info: dict) -> discord.Embed:
     embed = discord.Embed(
         title=embed_info['title'],
         description=embed_info['description'],
-        color=embed_info['color']
+        color=format.embed_color_dec
     )
 
     embed.set_footer(
-        text='https://bitacora.gg', icon_url=embed_info['avatar']
+        text='https://bitacora.gg', icon_url=format.bot_avatar_url
     )
 
     embed.set_image(url=embed_info['image_url'])
@@ -48,9 +49,7 @@ class CreateEmbedModal(discord.ui.Modal):
             'description': self.description.value,
             'field_list': [],
             'image_url': '',
-            'thumbnail_url': '',
-            'color': self.bot.color,
-            'avatar': self.bot.user.avatar
+            'thumbnail_url': ''
         }
 
         embed = create_embed(embed_info)
