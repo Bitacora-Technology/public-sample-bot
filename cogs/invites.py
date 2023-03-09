@@ -22,7 +22,6 @@ class Invites(commands.GroupCog, group_name='invites'):
 
     @commands.GroupCog.listener()
     async def on_ready(self) -> None:
-        await self.bot.wait_until_ready()
         await self.check_global_invites()
 
     def simple_embed(self, title: str, description: str) -> discord.Embed:
