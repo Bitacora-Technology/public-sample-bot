@@ -76,16 +76,50 @@ class ManageImageButton(discord.ui.Button):
         super().__init__(label=label, style=style)
 
 
+class AddThumbnailModal(discord.ui.Modal):
+    def __init__(self, embed_info: dict) -> None:
+        super().__init__(title='Add thumbnail')
+        self.embed_info = embed_info
+
+    url = discord.ui.TextInput(label='Image url')
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        self.embed_info['thumbnail_url'] = self.url.value
+        embed = create_embed(self.embed_info)
+        view = ConfigureEmbedView(self.embed_info)
+        try:
+            await interaction.response.edit_message(embed=embed, view=view)
+        except Exception:
+            content = 'Invalid thumbnail url'
+            await interaction.channel.send(content, delete_after=5)
+
+
 class ManageThumbnailButton(discord.ui.Button):
     def __init__(self, embed_info: dict) -> None:
-        thumbnail_url = embed_info['image_url']
+        thumbnail_url = embed_info['thumbnail_url']
+
         if thumbnail_url == '':
             label = 'Add thumbnail'
             style = discord.ButtonStyle.success
+            custom_id = 'add'
         else:
             label = 'Remove thumbnail'
             style = discord.ButtonStyle.danger
-        super().__init__(label=label, style=style)
+            custom_id = 'remove'
+
+        super().__init__(label=label, style=style, custom_id=custom_id)
+        self.embed_info = embed_info
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        if self.custom_id == 'add':
+            modal = AddThumbnailModal(self.embed_info)
+            await interaction.response.send_modal(modal)
+        else:
+            self.embed_info['thumbnail_url'] = ''
+
+            embed = create_embed(self.embed_info)
+            view = ConfigureEmbedView(self.embed_info)
+            await interaction.response.edit_message(embed=embed, view=view)
 
 
 class SendEmbedButton(discord.ui.Button):
