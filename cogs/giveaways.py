@@ -1,9 +1,11 @@
 from discord.ext import commands
 from discord import app_commands
 from cogs.utils import mongo, format
+from random import choices
 from time import time
 from bot import Bot
 import discord
+import asyncio
 
 
 def giveaway_embed(giveaway_info: dict) -> discord.Embed:
@@ -100,6 +102,33 @@ class CreateGiveawayModal(discord.ui.Modal):
             total_seconds += amount * self.time_table.get(unit, 0)
         return total_seconds
 
+    async def finish_giveaway(self) -> None:
+        giveaway = mongo.Giveaway(self.message.id)
+        giveaway_info = await giveaway.check()
+
+        name = giveaway_info.get('name')
+        user_list = giveaway_info.get('user_list', [])
+        winners = giveaway_info.get('winners')
+
+        embed = giveaway_embed(giveaway_info)
+        embed.remove_field(2)
+
+        if winners > len(user_list):
+            content = f'Not enough participants in \'{name}\' to draw a winner'
+            await self.message.reply(content)
+            await self.message.edit(embed=embed)
+            return
+
+        winner_list = [f'<@{u}>' for u in choices(user_list, k=winners)]
+        winner_text = ', '.join(winner_list)
+
+        embed.remove_field(1)
+        embed.add_field(name='Winners', value=winner_text)
+
+        content = f'Congratulations to {winner_text} for winning \'{name}\''
+        await self.message.reply(content)
+        await self.message.edit(embed=embed, view=None)
+
     async def on_submit(self, interaction: discord.Interaction) -> None:
         giveaway_end = self.calculate_end()
         if giveaway_end == 0:
@@ -117,14 +146,18 @@ class CreateGiveawayModal(discord.ui.Modal):
 
         embed = giveaway_embed(giveaway_info)
         view = ParticipateGroupbuyView()
-        message = await interaction.channel.send(embed=embed, view=view)
-        giveaway_info['_id'] = message.id
+        self.channel = interaction.channel
+        self.message = await self.channel.send(embed=embed, view=view)
+        giveaway_info['_id'] = self.message.id
 
         giveaway = mongo.Giveaway()
         await giveaway.create(giveaway_info)
 
         content = 'Giveaway has been created'
         await interaction.response.send_message(content, ephemeral=True)
+
+        await asyncio.sleep(giveaway_end)
+        await self.finish_giveaway()
 
 
 @app_commands.guild_only()
