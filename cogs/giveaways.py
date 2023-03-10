@@ -1,5 +1,6 @@
 from discord.ext import commands
 from discord import app_commands
+from cogs.utils import mongo, format
 from time import time
 from bot import Bot
 import discord
@@ -24,6 +25,50 @@ def giveaway_embed(giveaway_info: dict) -> discord.Embed:
     embed.add_field(name='Ends', value=f'<t:{end_timestamp}:R>')
 
     return embed
+
+
+class ParticipateGroupbuyButton(discord.ui.Button):
+    def __init__(self) -> None:
+        super().__init__(
+            label='Participate',
+            style=discord.ButtonStyle.primary,
+            custom_id='participate'
+        )
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        giveaway = mongo.Giveaway(interaction.message.id)
+        giveaway_info = await giveaway.check()
+
+        if giveaway_info is None:
+            content = 'Giveaway not found'
+            await interaction.response.send_message(content, ephemeral=True)
+            return
+
+        user_id = interaction.user.id
+        user_list = giveaway_info.get('user_list', [])
+
+        if user_id not in user_list:
+            user_list.append(user_id)
+            action = 'joined'
+        else:
+            user_list.remove(user_id)
+            action = 'left'
+
+        await giveaway.update({'user_list': user_list})
+
+        giveaway_info['user_list'] = user_list
+        embed = giveaway_embed(giveaway_info)
+        await interaction.message.edit(embed=embed)
+
+        giveaway_name = giveaway_info['name']
+        content = f'Giveaway \'{giveaway_name}\' {action}'
+        await interaction.response.send_message(content, ephemeral=True)
+
+
+class ParticipateGroupbuyView(discord.ui.View):
+    def __init__(self) -> None:
+        super().__init__(timeout=None)
+        self.add_item(ParticipateGroupbuyButton())
 
 
 class CreateGiveawayModal(discord.ui.Modal):
@@ -66,12 +111,20 @@ class CreateGiveawayModal(discord.ui.Modal):
             'name': self.name.value,
             'winners': int(self.winners.value),
             'end': end_timestamp,
-            'color': self.bot.color,
-            'avatar': self.bot.user.avatar
+            'color': format.embed_color_dec,
+            'avatar': format.bot_avatar_url
         }
 
         embed = giveaway_embed(giveaway_info)
-        await interaction.response.send_message(embed=embed)
+        view = ParticipateGroupbuyView()
+        message = await interaction.channel.send(embed=embed, view=view)
+        giveaway_info['_id'] = message.id
+
+        giveaway = mongo.Giveaway()
+        await giveaway.create(giveaway_info)
+
+        content = 'Giveaway has been created'
+        await interaction.response.send_message(content, ephemeral=True)
 
 
 @app_commands.guild_only()
