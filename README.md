@@ -5,7 +5,7 @@ This is a public bot developed by [Bitacora](https://bitacora.gg).
 ### Features:
 
  - [ ] Tickets
- - [ ] Giveaways
+ - [x] Giveaways
  - [ ] Polls
  - [ ] Reminders
  - [ ] Economy
