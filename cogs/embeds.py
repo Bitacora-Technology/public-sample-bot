@@ -1,6 +1,7 @@
 from discord.ext import commands
 from discord import app_commands
 from cogs.utils import formatting
+from importlib import reload
 from bot import Bot
 import discord
 
@@ -321,6 +322,11 @@ class ConfigureEmbedView(discord.ui.View):
 class Embeds(commands.GroupCog, group_name='embeds'):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
+
+    async def cog_load(self) -> None:
+        module_list = [formatting]
+        for module in module_list:
+            reload(module)
 
     @app_commands.command()
     async def send(self, interaction: discord.Interaction) -> None:
