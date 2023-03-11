@@ -1,6 +1,7 @@
 from discord.ext import commands
 from discord import app_commands
 from cogs.utils import formatting
+from importlib import reload
 from bot import Bot
 import discord
 
@@ -61,6 +62,15 @@ class OpenTicketView(discord.ui.View):
 class Tickets(commands.GroupCog, group_name='tickets'):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
+
+    async def cog_load(self) -> None:
+        module_list = [formatting]
+        for module in module_list:
+            reload(module)
+
+        view_list = [OpenTicketView()]
+        for view in view_list:
+            self.bot.add_view(view)
 
     def panel_embed(self) -> discord.Embed:
         embed = discord.Embed(
