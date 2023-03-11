@@ -1,6 +1,7 @@
 from discord.ext import commands
 from discord import app_commands
 from cogs.utils import mongo, formatting
+from importlib import reload
 from bot import Bot
 import discord
 
@@ -10,6 +11,11 @@ class Invites(commands.GroupCog, group_name='invites'):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
         self.invites = {}
+
+    async def cog_load(self) -> None:
+        module_list = [mongo, formatting]
+        for module in module_list:
+            reload(module)
 
     async def check_global_invites(self) -> None:
         for guild in self.bot.guilds:
