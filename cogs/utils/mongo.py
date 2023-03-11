@@ -25,15 +25,22 @@ class Giveaway:
 
 
 class Guild:
-    def __init__(self, guild: int = 0) -> None:
+    def __init__(self, guild: int) -> None:
         self.guilds = db['guilds']
         self.filter = {'_id': guild}
 
-    async def create(self, query: dict) -> None:
-        await self.guilds.insert_one(query)
+    async def new(self) -> None:
+        await self.guilds.insert_one(self.filter)
+
+    async def find(self) -> Optional[dict]:
+        return await self.guilds.find_one(self.filter)
 
     async def check(self) -> dict:
-        return await self.guilds.find_one(self.filter)
+        guild_info = await self.find()
+        if not guild_info:
+            await self.new()
+            guild_info = await self.find()
+        return guild_info
 
     async def update(self, query: dict, method: str = 'set') -> None:
         update_query = {f'${method}': query}
