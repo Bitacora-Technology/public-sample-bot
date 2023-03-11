@@ -24,6 +24,22 @@ class Giveaway:
         await self.giveaways.delete_one(self.filter)
 
 
+class Guild:
+    def __init__(self, guild: int = 0) -> None:
+        self.guilds = db['guilds']
+        self.filter = {'_id': guild}
+
+    async def create(self, query: dict) -> None:
+        await self.guilds.insert_one(query)
+
+    async def check(self) -> dict:
+        return await self.guilds.find_one(self.filter)
+
+    async def update(self, query: dict, method: str = 'set') -> None:
+        update_query = {f'${method}': query}
+        await self.guilds.update_one(self.filter, update_query, upsert=True)
+
+
 class User:
     def __init__(self, user: int = 0) -> None:
         self.users = db['users']
