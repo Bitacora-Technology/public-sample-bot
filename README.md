@@ -4,7 +4,7 @@ This is a public bot developed by [Bitacora](https://bitacora.gg).
 
 ### Features:
 
- - [ ] Tickets
+ - [x] Tickets
  - [x] Giveaways
  - [ ] Polls
  - [ ] Reminders
