@@ -1,6 +1,7 @@
 from discord.ext import commands
 from discord import app_commands
-from cogs.utils import formatting, mongo
+from cogs.utils import mongo, formatting
+from importlib import reload
 from random import choices
 from time import time
 from bot import Bot
@@ -165,6 +166,11 @@ class CreateGiveawayModal(discord.ui.Modal):
 class Giveaways(commands.GroupCog, group_name='giveaways'):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
+
+    async def cog_load(self) -> None:
+        module_list = [mongo, formatting]
+        for module in module_list:
+            reload(module)
 
     @app_commands.command()
     async def create(self, interaction: discord.Interaction) -> None:
