@@ -20,6 +20,9 @@ class Giveaway:
         update_query = {f'${method}': query}
         await self.giveaways.update_one(self.filter, update_query, upsert=True)
 
+    async def delete(self) -> None:
+        await self.giveaways.delete_one(self.filter)
+
 
 class User:
     def __init__(self, user: int = 0) -> None:
