@@ -1,6 +1,6 @@
 from discord.ext import commands
 from discord import app_commands
-from cogs.utils import mongo
+from cogs.utils import mongo, formatting
 from bot import Bot
 import discord
 
@@ -28,10 +28,10 @@ class Invites(commands.GroupCog, group_name='invites'):
         embed = discord.Embed(
             title=title,
             description=description,
-            color=self.bot.color
+            color=formatting.embed_color_dec
         )
         embed.set_footer(
-            text='https://bitacora.gg', icon_url=self.bot.user.avatar
+            text='https://bitacora.gg', icon_url=formatting.bot_avatar_url
         )
         return embed
 
