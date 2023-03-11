@@ -2,6 +2,7 @@ from discord.ext import commands
 from discord import app_commands
 from cogs.utils import formatting
 from importlib import reload
+from asyncio import sleep
 from bot import Bot
 import discord
 
@@ -62,6 +63,7 @@ class OpenTicketView(discord.ui.View):
 class Tickets(commands.GroupCog, group_name='tickets'):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
+        self.category_name = 'Tickets'
 
     async def cog_load(self) -> None:
         module_list = [formatting]
@@ -93,6 +95,25 @@ class Tickets(commands.GroupCog, group_name='tickets'):
         await interaction.channel.send(embed=embed, view=view)
         content = 'Ticket panel sent'
         await interaction.response.send_message(content, ephemeral=True)
+
+    @app_commands.command()
+    async def close(self, interaction: discord.Interaction) -> None:
+        """Close the ticket"""
+        category = interaction.channel.category
+        if category is None or category.name != self.category_name:
+            content = (
+                'The command only works at the '
+                f'\'{self.category_name}\' category'
+            )
+            await interaction.response.send_message(content, ephemeral=True)
+            return
+
+        user = interaction.user
+        content = f'Closing ticket as requested by {user.mention}'
+        await interaction.response.send_message(content)
+
+        await sleep(5)
+        await interaction.channel.delete()
 
 
 async def setup(bot: Bot) -> None:
