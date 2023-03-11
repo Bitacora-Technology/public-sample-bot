@@ -130,6 +130,8 @@ class CreateGiveawayModal(discord.ui.Modal):
         await self.message.reply(content)
         await self.message.edit(embed=embed, view=None)
 
+        await giveaway.delete()
+
     async def on_submit(self, interaction: discord.Interaction) -> None:
         giveaway_end = self.calculate_end()
         if giveaway_end == 0:
