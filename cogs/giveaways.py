@@ -1,6 +1,6 @@
 from discord.ext import commands
 from discord import app_commands
-from cogs.utils import mongo, format
+from cogs.utils import formatting, mongo
 from random import choices
 from time import time
 from bot import Bot
@@ -140,8 +140,8 @@ class CreateGiveawayModal(discord.ui.Modal):
             'name': self.name.value,
             'winners': int(self.winners.value),
             'end': end_timestamp,
-            'color': format.embed_color_dec,
-            'avatar': format.bot_avatar_url
+            'color': formatting.embed_color_dec,
+            'avatar': formatting.bot_avatar_url
         }
 
         embed = giveaway_embed(giveaway_info)

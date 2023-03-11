@@ -1,6 +1,6 @@
 from discord.ext import commands
 from discord import app_commands
-from cogs.utils import format
+from cogs.utils import formatting
 from bot import Bot
 import discord
 
@@ -9,11 +9,11 @@ def create_embed(embed_info: dict) -> discord.Embed:
     embed = discord.Embed(
         title=embed_info['title'],
         description=embed_info['description'],
-        color=format.embed_color_dec
+        color=formatting.embed_color_dec
     )
 
     embed.set_footer(
-        text='https://bitacora.gg', icon_url=format.bot_avatar_url
+        text='https://bitacora.gg', icon_url=formatting.bot_avatar_url
     )
 
     embed.set_image(url=embed_info['image_url'])
