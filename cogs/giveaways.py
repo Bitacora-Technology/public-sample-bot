@@ -174,7 +174,7 @@ class Giveaways(commands.GroupCog, group_name='giveaways'):
 
         view_list = [ParticipateGroupbuyView()]
         for view in view_list:
-            await self.bot.add_view(view)
+            self.bot.add_view(view)
 
     @app_commands.command()
     async def create(self, interaction: discord.Interaction) -> None:
