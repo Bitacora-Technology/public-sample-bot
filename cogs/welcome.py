@@ -42,6 +42,26 @@ class Welcome(commands.GroupCog, group_name='welcome'):
         embed = self.simple_embed(content)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
+    @app_commands.command()
+    async def disable(self, interaction: discord.Interaction) -> None:
+        """Disable the welcome messages"""
+        guild = mongo.Guild(interaction.guild_id)
+        guild_info = await guild.check()
+        welcome = guild_info.get('welcome', False)
+
+        if welcome is False:
+            content = 'Welcome messages are already disabled'
+            embed = self.simple_embed(content)
+            await interaction.response.send_message(
+                embed=embed, ephemeral=True
+            )
+            return
+
+        await guild.update({'welcome': False})
+        content = 'Welcome messages have been disabled'
+        embed = self.simple_embed(content)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
 
 async def setup(bot: Bot) -> None:
     await bot.add_cog(Welcome(bot))
