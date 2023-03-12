@@ -44,6 +44,38 @@ class Economy(commands.GroupCog, group_name='economy'):
         content = f'Emoji {emoji} has been set as coin'
         await interaction.followup.send(content)
 
+    async def find_receiver(self, channel_id: int, message_id: int) -> int:
+        channel = self.bot.get_channel(channel_id)
+        if channel is None:
+            channel = await self.bot.fetch_channel(channel_id)
+
+        message = await channel.fetch_message(message_id)
+        return message.author.id
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(
+        self, payload: discord.RawReactionActionEvent
+    ) -> None:
+        guild = mongo.Guild(payload.guild_id)
+        guild_info = await guild.check()
+
+        emoji = guild_info.get('emoji', '')
+        if emoji != str(payload.emoji):
+            return
+
+        receiver = await self.find_receiver(
+            payload.channel_id, payload.message_id
+        )
+
+        if receiver == payload.user_id:
+            pass
+
+        user = mongo.User(receiver)
+
+        guild_id = str(payload.guild_id)
+        query = {f'economy.{guild_id}.balance': 1}
+        await user.update(query, method='inc')
+
 
 async def setup(bot: Bot) -> None:
     await bot.add_cog(Economy(bot))
