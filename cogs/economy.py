@@ -2,6 +2,7 @@ from discord.ext import commands
 from discord import app_commands
 from asyncio import TimeoutError
 from cogs.utils import mongo, formatting
+from importlib import reload
 from bot import Bot
 import discord
 
@@ -58,6 +59,15 @@ class EconomyPanelView(discord.ui.View):
 class Economy(commands.GroupCog, group_name='economy'):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
+
+    async def cog_load(self) -> None:
+        module_list = [mongo, formatting]
+        for module in module_list:
+            reload(module)
+
+        view_list = [EconomyPanelView()]
+        for view in view_list:
+            self.bot.add_view(view)
 
     @app_commands.command()
     async def coin(self, interaction: discord.Interaction) -> None:
