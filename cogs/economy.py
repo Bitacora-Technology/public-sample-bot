@@ -1,9 +1,56 @@
 from discord.ext import commands
 from discord import app_commands
 from asyncio import TimeoutError
-from cogs.utils import mongo
+from cogs.utils import mongo, formatting
 from bot import Bot
 import discord
+
+
+class CheckBalanceButton(discord.ui.Button):
+    def __init__(self) -> None:
+        super().__init__(
+            label='My balance',
+            custom_id='check-balance',
+            style=discord.ButtonStyle.primary
+        )
+
+    def balance_embed(self, balance: int, emoji: str) -> discord.Embed:
+        embed = discord.Embed(
+            title='Coin balance',
+            description=f'Your balance is {balance} {emoji}',
+            color=formatting.embed_color_dec
+        )
+
+        embed.set_footer(
+            text='https://bitacora.gg', icon_url=formatting.bot_avatar_url
+        )
+
+        return embed
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        user_id = interaction.user.id
+        guild_id = interaction.guild_id
+
+        guild = mongo.Guild(guild_id)
+        guild_info = await guild.check()
+
+        emoji = guild_info.get('emoji', '')
+
+        user = mongo.User(user_id)
+        user_info = await user.check()
+
+        economy_dict = user_info.get('economy', {})
+        guild_info = economy_dict.get(str(guild_id), {})
+        balance = guild_info.get('balance', 0)
+
+        embed = self.balance_embed(balance, emoji)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
+class EconomyPanelView(discord.ui.View):
+    def __init__(self) -> None:
+        super().__init__(timeout=None)
+        self.add_item(CheckBalanceButton())
 
 
 @app_commands.guild_only()
@@ -43,6 +90,40 @@ class Economy(commands.GroupCog, group_name='economy'):
 
         content = f'Emoji {emoji} has been set as coin'
         await interaction.followup.send(content)
+
+    def panel_embed(self, emoji: str) -> discord.Embed:
+        embed = discord.Embed(
+            title='Economy',
+            description=(
+                'You can give a coin to an user reacting '
+                f'to his message with emoji {emoji}'
+            ),
+            color=formatting.embed_color_dec
+        )
+
+        embed.set_footer(
+            text='https://bitacora.gg', icon_url=formatting.bot_avatar_url
+        )
+
+        return embed
+
+    @app_commands.command()
+    async def panel(self, interaction: discord.Interaction) -> None:
+        """Send an economy panel"""
+        guild = mongo.Guild(interaction.guild_id)
+        guild_info = await guild.check()
+
+        emoji = guild_info.get('emoji', '')
+        if emoji == '':
+            content = 'Economy hasn\'t been configured yet'
+            await interaction.response.send_message(content, ephemeral=True)
+            return
+
+        embed = self.panel_embed(emoji)
+        view = EconomyPanelView()
+        await interaction.channel.send(embed=embed, view=view)
+        content = 'Economy panel sent'
+        await interaction.response.send_message(content, ephemeral=True)
 
     async def find_receiver(self, channel_id: int, message_id: int) -> int:
         channel = self.bot.get_channel(channel_id)
