@@ -7,8 +7,7 @@ This is a public bot developed by [Bitacora](https://bitacora.gg).
  - [x] Tickets
  - [x] Giveaways
  - [ ] Polls
- - [ ] Reminders
- - [ ] Economy
+ - [x] Economy
  - [x] Embeds
  - [ ] Welcome
  - [ ] Roles
