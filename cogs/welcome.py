@@ -76,6 +76,40 @@ class Welcome(commands.GroupCog, group_name='welcome'):
         content = f'The channel {channel.mention} has been set'
         await interaction.response.send_message(content, ephemeral=True)
 
+    def member_embed(self, member: discord.Member) -> discord.Member:
+        embed = discord.Embed(
+            title='New Arrival',
+            color=formatting.embed_color_dec
+        )
+        embed.add_field(
+            name='Member', value=f'{member.name}#{member.discriminator}'
+        )
+        embed.set_footer(
+            text='https://bitacora.gg', icon_url=formatting.bot_avatar_url
+        )
+        embed.set_thumbnail(url=member.avatar)
+
+        return embed
+
+    @commands.GroupCog.listener()
+    async def on_member_join(self, member: discord.Member) -> None:
+        guild = mongo.Guild(member.guild.id)
+        guild_info = await guild.check()
+
+        welcome_info = guild_info.get('welcome', {})
+        enabled = welcome_info.get('enabled', False)
+        channel_id = welcome_info.get('channel', None)
+
+        if enabled is False or channel_id is None:
+            return
+
+        channel = member.guild.get_channel(channel_id)
+        if channel is None:
+            channel = member.guild.fetch_channel(channel_id)
+
+        embed = self.member_embed(member)
+        await channel.send(embed=embed)
+
 
 async def setup(bot: Bot) -> None:
     await bot.add_cog(Welcome(bot))
