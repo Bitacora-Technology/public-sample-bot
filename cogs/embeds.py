@@ -32,9 +32,8 @@ def create_embed(embed_info: dict) -> discord.Embed:
 
 
 class CreateEmbedModal(discord.ui.Modal):
-    def __init__(self, bot: Bot) -> None:
+    def __init__(self) -> None:
         super().__init__(title='Create embed')
-        self.bot = bot
 
     _title = discord.ui.TextInput(
         label='Title', required=False, max_length=256
@@ -331,7 +330,7 @@ class Embeds(commands.GroupCog, group_name='embeds'):
     @app_commands.command()
     async def send(self, interaction: discord.Interaction) -> None:
         """Send a custom embed"""
-        modal = CreateEmbedModal(self.bot)
+        modal = CreateEmbedModal()
         await interaction.response.send_modal(modal)
 
 
