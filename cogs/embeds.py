@@ -120,8 +120,7 @@ class RemoveFieldDropdown(discord.ui.Select):
         self.values.sort()
         self.values.reverse()
         for value in self.values:
-            value = int(value)
-            self.embed_info['field_list'].pop(value)
+            self.embed_info['field_list'].pop(int(value))
 
         embed = create_embed(self.embed_info)
         view = ManageFieldsView(self.embed_info)
