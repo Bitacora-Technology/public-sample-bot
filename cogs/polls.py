@@ -20,17 +20,17 @@ def get_progress_bar(choice: int, total_votes: int) -> str:
     progress_bar = ''
 
     if full_count >= 1:
-        emoji = ''
+        emoji = formatting.poll_emoji_dict['100']
         progress_bar += emoji * full_count
 
     if remainder >= 7.5:
-        emoji = ''
+        emoji = formatting.poll_emoji_dict['75']
         progress_bar += emoji
     elif remainder >= 5:
-        emoji = ''
+        emoji = formatting.poll_emoji_dict['50']
         progress_bar += emoji
     elif remainder >= 2.5:
-        emoji = ''
+        emoji = formatting.poll_emoji_dict['25']
         progress_bar += emoji
 
     progress_bar += f' {round(percentage, 2)}%'
@@ -174,6 +174,43 @@ class RemoveChoiceButton(discord.ui.Button):
         await interaction.response.edit_message(embed=embed, view=view)
 
 
+class VotePollButton(discord.ui.Button):
+    def __init__(self, count: int) -> None:
+        super().__init__(label=str(count), style=discord.ButtonStyle.primary)
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        poll = mongo.Poll(interaction.message.id)
+        poll_info = await poll.check()
+
+        user_id = interaction.user.id
+
+        user_list = []
+        choice_list = poll_info['choice_list']
+        for choice in choice_list:
+            [user_list.append(user) for user in choice['votes']]
+
+        if user_id in user_list:
+            content = 'You have already voted'
+            await interaction.response.send_message(content, ephemeral=True)
+            return
+
+        choice_list[int(self.label) - 1]['votes'].append(user_id)
+        await poll.update({'choice_list': choice_list})
+
+        embed = poll_embed(poll_info)
+        await interaction.message.edit(embed=embed)
+
+        content = 'Your vote has been registered'
+        await interaction.response.send_message(content, ephemeral=True)
+
+
+class VotePollView(discord.ui.View):
+    def __init__(self, choice_list: list) -> None:
+        super().__init__(timeout=None)
+        for count in range(1, len(choice_list) + 1):
+            self.add_item(VotePollButton(count))
+
+
 class PublishPollButton(discord.ui.Button):
     def __init__(self, poll_info: dict, disabled: bool) -> None:
         super().__init__(
@@ -184,7 +221,16 @@ class PublishPollButton(discord.ui.Button):
         self.poll_info = poll_info
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        pass
+        embed = poll_embed(self.poll_info)
+        view = VotePollView(self.poll_info['choice_list'])
+        message = await interaction.channel.send(embed=embed, view=view)
+        self.poll_info['_id'] = message.id
+
+        poll = mongo.Poll()
+        await poll.create(self.poll_info)
+
+        content = 'Poll has been created'
+        await interaction.response.send_message(content, ephemeral=True)
 
 
 class ConfigurePollView(discord.ui.View):
