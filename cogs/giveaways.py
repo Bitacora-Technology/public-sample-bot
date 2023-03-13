@@ -11,11 +11,11 @@ import asyncio
 
 def giveaway_embed(giveaway_info: dict) -> discord.Embed:
     embed = discord.Embed(
-        title=giveaway_info['name'], color=giveaway_info['color']
+        title=giveaway_info['name'], color=formatting.embed_color_dec
     )
 
     embed.set_footer(
-        text='https://bitacora.gg', icon_url=giveaway_info['avatar']
+        text='https://bitacora.gg', icon_url=formatting.bot_avatar_url
     )
 
     user_list = giveaway_info.get('user_list', [])
@@ -142,9 +142,7 @@ class CreateGiveawayModal(discord.ui.Modal):
         giveaway_info = {
             'name': self.name.value,
             'winners': int(self.winners.value),
-            'end': end_timestamp,
-            'color': formatting.embed_color_dec,
-            'avatar': formatting.bot_avatar_url
+            'end': end_timestamp
         }
 
         embed = giveaway_embed(giveaway_info)
