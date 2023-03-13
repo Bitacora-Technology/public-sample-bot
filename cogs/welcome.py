@@ -27,9 +27,10 @@ class Welcome(commands.GroupCog, group_name='welcome'):
         """Enable the welcome messages"""
         guild = mongo.Guild(interaction.guild_id)
         guild_info = await guild.check()
-        welcome = guild_info.get('welcome', False)
+        welcome_info = guild_info.get('welcome', {})
+        enabled = welcome_info.get('enabled', False)
 
-        if welcome is True:
+        if enabled is True:
             content = 'Welcome messages are already enabled'
             embed = self.simple_embed(content)
             await interaction.response.send_message(
@@ -37,7 +38,7 @@ class Welcome(commands.GroupCog, group_name='welcome'):
             )
             return
 
-        await guild.update({'welcome': True})
+        await guild.update({'welcome.enabled': True})
         content = 'Welcome messages have been enabled'
         embed = self.simple_embed(content)
         await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -47,9 +48,10 @@ class Welcome(commands.GroupCog, group_name='welcome'):
         """Disable the welcome messages"""
         guild = mongo.Guild(interaction.guild_id)
         guild_info = await guild.check()
-        welcome = guild_info.get('welcome', False)
+        welcome_info = guild_info.get('welcome', {})
+        enabled = welcome_info.get('enabled', False)
 
-        if welcome is False:
+        if enabled is False:
             content = 'Welcome messages are already disabled'
             embed = self.simple_embed(content)
             await interaction.response.send_message(
@@ -57,7 +59,7 @@ class Welcome(commands.GroupCog, group_name='welcome'):
             )
             return
 
-        await guild.update({'welcome': False})
+        await guild.update({'welcome.enabled': False})
         content = 'Welcome messages have been disabled'
         embed = self.simple_embed(content)
         await interaction.response.send_message(embed=embed, ephemeral=True)
