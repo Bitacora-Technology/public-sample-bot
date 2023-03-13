@@ -64,6 +64,18 @@ class Welcome(commands.GroupCog, group_name='welcome'):
         embed = self.simple_embed(content)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
+    @app_commands.command()
+    @app_commands.describe(channel='The arrivals channel')
+    async def set(
+        self, interaction: discord.Interaction, channel: discord.TextChannel
+    ) -> None:
+        """Set where the messages will be sent"""
+        guild = mongo.Guild(interaction.guild_id)
+        await guild.update({'welcome.channel': channel.id})
+
+        content = f'The channel {channel.mention} has been set'
+        await interaction.response.send_message(content, ephemeral=True)
+
 
 async def setup(bot: Bot) -> None:
     await bot.add_cog(Welcome(bot))
