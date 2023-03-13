@@ -9,7 +9,7 @@ This is a public bot developed by [Bitacora](https://bitacora.gg).
  - [ ] Polls
  - [x] Economy
  - [x] Embeds
- - [ ] Welcome
+ - [x] Welcome
  - [ ] Roles
  - [ ] Games
  - [x] Invites
