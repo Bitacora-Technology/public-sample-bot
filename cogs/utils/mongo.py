@@ -47,6 +47,25 @@ class Guild:
         await self.guilds.update_one(self.filter, update_query, upsert=True)
 
 
+class Poll:
+    def __init__(self, poll: int = 0) -> None:
+        self.polls = db['polls']
+        self.filter = {'_id': poll}
+
+    async def create(self, query: dict) -> None:
+        await self.polls.insert_one(query)
+
+    async def check(self) -> dict:
+        return await self.polls.find_one(self.filter)
+
+    async def update(self, query: dict, method: str = 'set') -> None:
+        update_query = {f'${method}': query}
+        await self.polls.update_one(self.filter, update_query, upsert=True)
+
+    async def delete(self) -> None:
+        await self.polls.delete_one(self.filter)
+
+
 class User:
     def __init__(self, user: int = 0) -> None:
         self.users = db['users']
