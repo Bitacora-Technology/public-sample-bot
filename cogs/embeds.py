@@ -186,8 +186,10 @@ class AddImageModal(discord.ui.Modal):
         try:
             await interaction.response.edit_message(embed=embed, view=view)
         except Exception:
-            content = 'Invalid image url'
-            await interaction.channel.send(content, delete_after=5)
+            title = 'Send embed'
+            description = 'Invalid image url'
+            embed = _embeds.simple_embed(title, description)
+            await interaction.channel.send(embed=embed, delete_after=5)
 
 
 class ManageImageButton(discord.ui.Button):
@@ -236,8 +238,10 @@ class AddThumbnailModal(discord.ui.Modal):
         try:
             await interaction.response.edit_message(embed=embed, view=view)
         except Exception:
-            content = 'Invalid image url'
-            await interaction.channel.send(content, delete_after=5)
+            title = 'Send embed'
+            description = 'Invalid image url'
+            embed = _embeds.simple_embed(title, description)
+            await interaction.channel.send(embed=embed, delete_after=5)
 
 
 class ManageThumbnailButton(discord.ui.Button):
