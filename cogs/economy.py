@@ -22,30 +22,15 @@ class CheckBalanceButton(discord.ui.Button):
         user_id = interaction.user.id
         guild_id = interaction.guild_id
 
-        guild = mongo.Guild(guild_id)
-        guild_info = await guild.check()
-
         guild_name = interaction.guild.name
         title = embed_title.format(guild_name)
-
-        emoji = guild_info.get('emoji', None)
-        if emoji is None:
-            description = (
-                'An admin needs to set up the emoji that '
-                'will act as a coin first'
-            )
-            embed = embeds.simple_embed(title, description)
-            await interaction.response.send_message(
-                embed=embed, ephemeral=True
-            )
-            return
 
         user = mongo.User(user_id)
         user_info = await user.check()
 
         economy_dict = user_info.get('economy', {})
-        guild_info = economy_dict.get(str(guild_id), {})
-        balance = guild_info.get('balance', 0)
+        guild_economy = economy_dict.get(str(guild_id), {})
+        balance = guild_economy.get('balance', 0)
 
         coin_text = 'coin'
         if balance > 1:
@@ -72,34 +57,19 @@ class GuildLeaderboardButton(discord.ui.Button):
         user_list = []
         async for user_info in cursor:
             economy_info = user_info.get('economy', {})
-            guild_info = economy_info.get(guild_id, None)
+            guild_economy = economy_info.get(guild_id, None)
 
-            if guild_info is None:
+            if guild_economy is None:
                 continue
 
             user_item = {
                 'id': user_info['_id'],
-                'balance': guild_info['balance']
+                'balance': guild_economy['balance']
             }
             user_list.append(user_item)
 
-        guild = mongo.Guild(interaction.guild_id)
-        guild_info = await guild.check()
-
         guild_name = interaction.guild.name
         title = embed_title.format(guild_name)
-
-        emoji = guild_info.get('emoji', None)
-        if emoji is None:
-            description = (
-                'An admin needs to set up the emoji that '
-                'will act as a coin first'
-            )
-            embed = embeds.simple_embed(title, description)
-            await interaction.response.send_message(
-                embed=embed, ephemeral=True
-            )
-            return
 
         leaderboard = sorted(
             user_list, key=lambda u: u['balance'], reverse=True
