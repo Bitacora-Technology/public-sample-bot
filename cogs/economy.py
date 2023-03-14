@@ -1,7 +1,7 @@
 from discord.ext import commands
 from discord import app_commands
 from asyncio import TimeoutError
-from cogs.utils import mongo, formatting
+from cogs.utils import mongo, embeds
 from importlib import reload
 from bot import Bot
 import discord
@@ -14,19 +14,6 @@ class CheckBalanceButton(discord.ui.Button):
             custom_id='check-balance',
             style=discord.ButtonStyle.primary
         )
-
-    def balance_embed(self, balance: int, emoji: str) -> discord.Embed:
-        embed = discord.Embed(
-            title='Coin balance',
-            description=f'Your balance is {balance} {emoji}',
-            color=formatting.embed_color_dec
-        )
-
-        embed.set_footer(
-            text='https://bitacora.gg', icon_url=formatting.bot_avatar_url
-        )
-
-        return embed
 
     async def callback(self, interaction: discord.Interaction) -> None:
         user_id = interaction.user.id
@@ -44,7 +31,10 @@ class CheckBalanceButton(discord.ui.Button):
         guild_info = economy_dict.get(str(guild_id), {})
         balance = guild_info.get('balance', 0)
 
-        embed = self.balance_embed(balance, emoji)
+        guild_name = interaction.guild.name
+        title = f'{guild_name}\'s economy'
+        description = f'Your balance is {balance} {emoji}'
+        embed = embeds.simple_embed(title, description)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
@@ -55,28 +45,6 @@ class GuildLeaderboardButton(discord.ui.Button):
             custom_id='guild-leaderboard',
             style=discord.ButtonStyle.primary
         )
-
-    def leaderboard_embed(
-        self, leaderboard: list, emoji: str
-    ) -> discord.Embed:
-        descripion = ''
-        for index in range(0, len(leaderboard) - 1):
-            user = leaderboard[index]
-            user_id = user['id']
-            balance = user['balance']
-            descripion += f'{index + 1}. <@{user_id}>: {balance} {emoji}\n'
-
-        embed = discord.Embed(
-            title='Coin leaderboard',
-            description=descripion,
-            color=formatting.embed_color_dec
-        )
-
-        embed.set_footer(
-            text='https://bitacora.gg', icon_url=formatting.bot_avatar_url
-        )
-
-        return embed
 
     async def callback(self, interaction: discord.Interaction) -> None:
         guild_id = str(interaction.guild_id)
@@ -99,13 +67,22 @@ class GuildLeaderboardButton(discord.ui.Button):
 
         guild = mongo.Guild(interaction.guild_id)
         guild_info = await guild.check()
-        emoji = guild_info.get('emoji', '')
+        emoji = guild_info.get('emoji', None)
 
         leaderboard = sorted(
             user_list, key=lambda u: u['balance'], reverse=True
         )[:10]
 
-        embed = self.leaderboard_embed(leaderboard, emoji)
+        guild_name = interaction.guild.name
+        title = f'{guild_name}\'s economy'
+
+        description = ''
+        for index in range(len(leaderboard)):
+            user_id = leaderboard[index]['id']
+            balance = leaderboard[index]['balance']
+            description += f'{index+1}. <@{user_id}>: {balance} {emoji}\n'
+
+        embed = embeds.simple_embed(title, description)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
@@ -123,7 +100,7 @@ class Economy(commands.GroupCog, group_name='economy'):
         self.bot = bot
 
     async def cog_load(self) -> None:
-        module_list = [mongo, formatting]
+        module_list = [mongo, embeds]
         for module in module_list:
             reload(module)
 
@@ -163,22 +140,6 @@ class Economy(commands.GroupCog, group_name='economy'):
         content = f'Emoji {emoji} has been set as coin'
         await interaction.followup.send(content)
 
-    def panel_embed(self, emoji: str) -> discord.Embed:
-        embed = discord.Embed(
-            title='Economy',
-            description=(
-                'You can give a coin to an user reacting '
-                f'to his message with emoji {emoji}'
-            ),
-            color=formatting.embed_color_dec
-        )
-
-        embed.set_footer(
-            text='https://bitacora.gg', icon_url=formatting.bot_avatar_url
-        )
-
-        return embed
-
     @app_commands.command()
     async def panel(self, interaction: discord.Interaction) -> None:
         """Send an economy panel"""
@@ -191,7 +152,13 @@ class Economy(commands.GroupCog, group_name='economy'):
             await interaction.response.send_message(content, ephemeral=True)
             return
 
-        embed = self.panel_embed(emoji)
+        guild_name = interaction.guild.name
+        title = f'{guild_name}\'s economy'
+        description = (
+            'You can give a coin to an user reacting to his '
+            f'message with emoji {emoji}'
+        )
+        embed = embeds.simple_embed(title, description)
         view = EconomyPanelView()
         await interaction.channel.send(embed=embed, view=view)
         content = 'Economy panel sent'
@@ -212,7 +179,7 @@ class Economy(commands.GroupCog, group_name='economy'):
         guild = mongo.Guild(payload.guild_id)
         guild_info = await guild.check()
 
-        emoji = guild_info.get('emoji', '')
+        emoji = guild_info.get('emoji', None)
         if emoji != str(payload.emoji):
             return
 
