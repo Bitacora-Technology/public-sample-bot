@@ -1,34 +1,9 @@
 from discord.ext import commands
 from discord import app_commands
-from cogs.utils import formatting
+from cogs.utils import embeds as _embeds
 from importlib import reload
 from bot import Bot
 import discord
-
-
-def create_embed(embed_info: dict) -> discord.Embed:
-    embed = discord.Embed(
-        title=embed_info['title'],
-        description=embed_info['description'],
-        color=formatting.embed_color_dec
-    )
-
-    embed.set_footer(
-        text='https://bitacora.gg', icon_url=formatting.bot_avatar_url
-    )
-
-    embed.set_image(url=embed_info['image_url'])
-    embed.set_thumbnail(url=embed_info['thumbnail_url'])
-
-    field_list = embed_info['field_list']
-    for field in field_list:
-        embed.add_field(
-            name=field['name'],
-            value=field['value'],
-            inline=False
-        )
-
-    return embed
 
 
 class CreateEmbedModal(discord.ui.Modal):
@@ -52,7 +27,7 @@ class CreateEmbedModal(discord.ui.Modal):
             'thumbnail_url': ''
         }
 
-        embed = create_embed(embed_info)
+        embed = _embeds.advanced_embed(embed_info)
         view = ConfigureEmbedView(embed_info)
         await interaction.response.send_message(
             embed=embed, view=view, ephemeral=True
@@ -77,7 +52,7 @@ class AddFieldModal(discord.ui.Modal):
         }
         self.embed_info['field_list'].append(field)
 
-        embed = create_embed(self.embed_info)
+        embed = _embeds.advanced_embed(self.embed_info)
         view = ManageFieldsView(self.embed_info)
         await interaction.response.edit_message(embed=embed, view=view)
 
@@ -122,7 +97,7 @@ class RemoveFieldDropdown(discord.ui.Select):
         for value in self.values:
             self.embed_info['field_list'].pop(int(value))
 
-        embed = create_embed(self.embed_info)
+        embed = _embeds.advanced_embed(self.embed_info)
         view = ManageFieldsView(self.embed_info)
         await interaction.response.edit_message(embed=embed, view=view)
 
@@ -133,7 +108,7 @@ class BackFieldsButton(discord.ui.Button):
         self.embed_info = embed_info
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        embed = create_embed(self.embed_info)
+        embed = _embeds.advanced_embed(self.embed_info)
         view = ManageFieldsView(self.embed_info)
         await interaction.response.edit_message(embed=embed, view=view)
 
@@ -158,7 +133,7 @@ class RemoveFieldButton(discord.ui.Button):
         if len(field_list) == 0:
             await interaction.response.defer()
         else:
-            embed = create_embed(self.embed_info)
+            embed = _embeds.advanced_embed(self.embed_info)
             view = RemoveFieldView(self.embed_info)
             await interaction.response.edit_message(embed=embed, view=view)
 
@@ -169,7 +144,7 @@ class BackConfigureButton(discord.ui.Button):
         self.embed_info = embed_info
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        embed = create_embed(self.embed_info)
+        embed = _embeds.advanced_embed(self.embed_info)
         view = ConfigureEmbedView(self.embed_info)
         await interaction.response.edit_message(embed=embed, view=view)
 
@@ -190,7 +165,7 @@ class ManageFieldsButton(discord.ui.Button):
         self.embed_info = embed_info
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        embed = create_embed(self.embed_info)
+        embed = _embeds.advanced_embed(self.embed_info)
         view = ManageFieldsView(self.embed_info)
         await interaction.response.edit_message(embed=embed, view=view)
 
@@ -205,7 +180,7 @@ class AddImageModal(discord.ui.Modal):
     async def on_submit(self, interaction: discord.Interaction) -> None:
         self.embed_info['image_url'] = self.url.value
 
-        embed = create_embed(self.embed_info)
+        embed = _embeds.advanced_embed(self.embed_info)
         view = ConfigureEmbedView(self.embed_info)
 
         try:
@@ -240,7 +215,7 @@ class ManageImageButton(discord.ui.Button):
         else:
             self.embed_info['image_url'] = ''
 
-            embed = create_embed(self.embed_info)
+            embed = _embeds.advanced_embed(self.embed_info)
             view = ConfigureEmbedView(self.embed_info)
             await interaction.response.edit_message(embed=embed, view=view)
 
@@ -255,7 +230,7 @@ class AddThumbnailModal(discord.ui.Modal):
     async def on_submit(self, interaction: discord.Interaction) -> None:
         self.embed_info['thumbnail_url'] = self.url.value
 
-        embed = create_embed(self.embed_info)
+        embed = _embeds.advanced_embed(self.embed_info)
         view = ConfigureEmbedView(self.embed_info)
 
         try:
@@ -290,7 +265,7 @@ class ManageThumbnailButton(discord.ui.Button):
         else:
             self.embed_info['thumbnail_url'] = ''
 
-            embed = create_embed(self.embed_info)
+            embed = _embeds.advanced_embed(self.embed_info)
             view = ConfigureEmbedView(self.embed_info)
             await interaction.response.edit_message(embed=embed, view=view)
 
@@ -301,7 +276,7 @@ class SendEmbedButton(discord.ui.Button):
         self.embed_info = embed_info
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        embed = create_embed(self.embed_info)
+        embed = _embeds.advanced_embed(self.embed_info)
         await interaction.channel.send(embed=embed)
         await interaction.response.defer()
 
@@ -322,7 +297,7 @@ class Embeds(commands.GroupCog, group_name='embeds'):
         self.bot = bot
 
     async def cog_load(self) -> None:
-        module_list = [formatting]
+        module_list = [_embeds]
         for module in module_list:
             reload(module)
 
