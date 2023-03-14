@@ -108,3 +108,14 @@ def poll_embed(poll_info: dict) -> discord.Embed:
         count += 1
 
     return embed
+
+
+def welcome_embed(member: discord.Member) -> discord.Embed:
+    embed = simple_embed('New arrival', None)
+
+    user_name = f'{member.name}#{member.discriminator}'
+    embed.add_field(name='Member', value=user_name)
+
+    embed.set_thumbnail(url=member.avatar)
+
+    return embed
