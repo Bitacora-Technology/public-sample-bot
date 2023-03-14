@@ -10,8 +10,9 @@ class Users(commands.Cog):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
         self.invite_url = (
-            'https://discord.com/api/oauth2/authorize?client_id=1085024816119156808'
-            '&permissions=8&scope=bot%20applications.commands'
+            'https://discord.com/api/oauth2/authorize?client_id='
+            '1085024816119156808&permissions=8&scope=bot%20'
+            'applications.commands'
         )
 
     @app_commands.command()
