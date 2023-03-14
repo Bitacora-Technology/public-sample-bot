@@ -48,10 +48,72 @@ class CheckBalanceButton(discord.ui.Button):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
+class GuildLeaderboardButton(discord.ui.Button):
+    def __init__(self) -> None:
+        super().__init__(
+            label='Leaderboard',
+            custom_id='guild-leaderboard',
+            style=discord.ButtonStyle.primary
+        )
+
+    def leaderboard_embed(
+        self, leaderboard: list, emoji: str
+    ) -> discord.Embed:
+        descripion = ''
+        for index in range(0, len(leaderboard) - 1):
+            user = leaderboard[index]
+            user_id = user['id']
+            balance = user['balance']
+            descripion += f'{index + 1}. <@{user_id}> - {balance} {emoji}'
+
+        embed = discord.Embed(
+            title='Coin leaderboard',
+            description=descripion,
+            color=formatting.embed_color_dec
+        )
+
+        embed.set_footer(
+            text='https://bitacora.gg', icon_url=formatting.bot_avatar_url
+        )
+
+        return embed
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        guild_id = str(interaction.guild_id)
+        users = mongo.User()
+        cursor = users.cursor()
+
+        user_list = []
+        async for user_info in cursor:
+            economy_info = user_info.get('economy', {})
+            guild_info = economy_info.get(guild_id, None)
+
+            if guild_info is None:
+                continue
+
+            user_item = {
+                'id': user_info['_id'],
+                'balance': guild_info['balance']
+            }
+            user_list.append(user_item)
+
+        guild = mongo.Guild(interaction.guild_id)
+        guild_info = await guild.check()
+        emoji = guild_info.get('emoji', '')
+
+        leaderboard = sorted(
+            user_list, key=lambda u: u['balance'], reverse=True
+        )[:10]
+
+        embed = self.leaderboard_embed(leaderboard, emoji)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
 class EconomyPanelView(discord.ui.View):
     def __init__(self) -> None:
         super().__init__(timeout=None)
         self.add_item(CheckBalanceButton())
+        self.add_item(GuildLeaderboardButton())
 
 
 @app_commands.guild_only()
