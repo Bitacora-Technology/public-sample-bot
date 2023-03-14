@@ -10,6 +10,13 @@ global_format = {
     )
 }
 
+emoji_dict = {
+    '100': '<:100percent:1085029281287110726>',
+    '75': '<:75percent:1085029283480735825>',
+    '50': '<:50percent:1085029285460443228>',
+    '25': '<:25percent:1085029287754743878>'
+}
+
 
 def simple_embed(title: str, description: str) -> discord.Embed:
     embed = discord.Embed(
@@ -45,5 +52,59 @@ def giveaway_embed(giveaway_info: dict) -> discord.Embed:
 
     timestamp = giveaway_info['end']
     embed.add_field(name='Ends', value=f'<t:{timestamp}:R>')
+
+    return embed
+
+
+def calculate_total_votes(choice_list: list) -> int:
+    votes = 0
+    for choice in choice_list:
+        votes += len(choice['votes'])
+    return votes
+
+
+def get_progress_bar(choice: int, total_votes: int) -> str:
+    percentage = 100 * choice / total_votes
+    full_count = int(percentage / 10)
+    remainder = percentage % 10
+
+    progress_bar = ''
+
+    if full_count >= 1:
+        emoji = emoji_dict['100']
+        progress_bar += emoji * full_count
+
+    if remainder >= 7.5:
+        emoji = emoji_dict['75']
+        progress_bar += emoji
+    elif remainder >= 5:
+        emoji = emoji_dict['50']
+        progress_bar += emoji
+    elif remainder >= 2.5:
+        emoji = emoji_dict['25']
+        progress_bar += emoji
+
+    progress_bar += f' {round(percentage, 2)}%'
+    return progress_bar
+
+
+def poll_embed(poll_info: dict) -> discord.Embed:
+    embed = simple_embed(poll_info['title'], None)
+
+    choice_list = poll_info['choice_list']
+    total_votes = calculate_total_votes(choice_list)
+
+    count = 1
+    for choice in choice_list:
+        title = choice['title']
+        votes = len(choice['votes'])
+
+        if total_votes > 0:
+            progress_bar = get_progress_bar(votes, total_votes)
+        else:
+            progress_bar = '0.0%'
+
+        embed.add_field(name=title, value=progress_bar, inline=False)
+        count += 1
 
     return embed
