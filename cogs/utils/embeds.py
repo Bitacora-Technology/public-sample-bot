@@ -1,7 +1,7 @@
 import discord
 
 
-embed_info = {
+global_format = {
     'color': 12718096,
     'footer': 'https://bitacora.gg',
     'image': (
@@ -13,7 +13,22 @@ embed_info = {
 
 def simple_embed(title: str, description: str) -> discord.Embed:
     embed = discord.Embed(
-        title=title, description=description, color=embed_info['color']
+        title=title, description=description, color=global_format['color']
     )
-    embed.set_footer(text=embed_info['footer'], icon_url=embed_info['image'])
+    embed.set_footer(
+        text=global_format['footer'], icon_url=global_format['image']
+    )
+    return embed
+
+
+def advanced_embed(embed_info: dict) -> discord.Embed:
+    embed = simple_embed(embed_info['title'], embed_info['description'])
+
+    embed.set_image(url=embed_info['image_url'])
+    embed.set_thumbnail(url=embed_info['thumbnail_url'])
+
+    field_list = embed_info['field_list']
+    for field in field_list:
+        embed.add_field(name=field['name'], value=field['value'], inline=False)
+
     return embed
