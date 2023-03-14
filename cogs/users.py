@@ -1,6 +1,6 @@
 from discord.ext import commands
 from discord import app_commands
-from cogs.utils import mongo, formatting
+from cogs.utils import mongo, embeds
 from bot import Bot
 import discord
 
@@ -22,18 +22,6 @@ class Users(commands.Cog):
         content = 'Work in progress'
         await interaction.response.send_message(content, ephemeral=True)
 
-    def simple_embed(self, title: str, description: str) -> discord.Embed:
-        embed = discord.Embed(
-            title=title,
-            description=description,
-            color=formatting.embed_color_dec
-        )
-        embed.set_footer(
-            text='https://bitacora.gg', icon_url=formatting.bot_avatar_url
-        )
-
-        return embed
-
     @app_commands.command()
     async def balance(self, interaction: discord.Interaction) -> None:
         """Check your coin balance"""
@@ -42,28 +30,28 @@ class Users(commands.Cog):
 
         economy_info = user_info.get('economy', {})
         guild_economy = economy_info.get(str(interaction.guild_id), {})
-        balance = guild_economy.get('balance', None)
+        balance = guild_economy.get('balance', 0)
 
-        guild = mongo.Guild(interaction.guild_id)
-        guild_info = await guild.check()
-        emoji = guild_info.get('emoji', '')
-
-        content = f'Your balance is {balance} {emoji}'
-        embed = self.simple_embed('Coin balance', content)
+        guild_name = interaction.guild.name
+        title = f'{guild_name}\'s economy'
+        description = f'Your balance is {balance} coins'
+        embed = embeds.simple_embed(title, description)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command()
     async def support(self, interaction: discord.Interaction) -> None:
         """Do you have any question?"""
-        content = f'[[Click here]]({self.server_invite})'
-        embed = self.simple_embed('Support server', content)
+        title = 'Support server'
+        description = f'[[Click here]]({self.server_invite})'
+        embed = embeds.simple_embed(title, description)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command()
     async def invite(self, interaction: discord.Interaction) -> None:
         """Add the bot to your server"""
-        content = f'[[Click here]]({self.bot_invite})'
-        embed = self.simple_embed('Add bot', content)
+        title = 'Add bot'
+        description = f'[[Click here]]({self.bot_invite})'
+        embed = embeds.simple_embed(title, description)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
