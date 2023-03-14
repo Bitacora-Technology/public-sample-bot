@@ -99,7 +99,7 @@ class CreateGiveawayModal(discord.ui.Modal):
         if winners > len(user_list):
             await self.message.edit(embed=embed)
 
-            description = f'Not enough participants in \'{name}\' to draw a winner'
+            description = 'Not enough participants to draw a winner'
             embed = embeds.simple_embed(name, description)
             await self.message.reply(embed=embed)
             return
