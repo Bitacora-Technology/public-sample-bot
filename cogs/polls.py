@@ -1,68 +1,9 @@
 from discord.ext import commands
 from discord import app_commands
-from cogs.utils import mongo, formatting
+from cogs.utils import mongo, embeds
 from importlib import reload
 from bot import Bot
 import discord
-
-
-def calculate_total_votes(choice_list: list) -> int:
-    votes = 0
-    for choice in choice_list:
-        votes += len(choice['votes'])
-    return votes
-
-
-def get_progress_bar(choice: int, total_votes: int) -> str:
-    percentage = 100 * choice / total_votes
-    full_count = int(percentage / 10)
-    remainder = percentage % 10
-
-    progress_bar = ''
-
-    if full_count >= 1:
-        emoji = formatting.poll_emoji_dict['100']
-        progress_bar += emoji * full_count
-
-    if remainder >= 7.5:
-        emoji = formatting.poll_emoji_dict['75']
-        progress_bar += emoji
-    elif remainder >= 5:
-        emoji = formatting.poll_emoji_dict['50']
-        progress_bar += emoji
-    elif remainder >= 2.5:
-        emoji = formatting.poll_emoji_dict['25']
-        progress_bar += emoji
-
-    progress_bar += f' {round(percentage, 2)}%'
-    return progress_bar
-
-
-def poll_embed(poll_info) -> discord.Embed:
-    embed = discord.Embed(
-        title=poll_info['title'],
-        color=formatting.embed_color_dec
-    )
-
-    embed.set_footer(
-        text='https://bitacora.gg', icon_url=formatting.bot_avatar_url
-    )
-
-    choice_list = poll_info['choice_list']
-    total_votes = calculate_total_votes(choice_list)
-
-    count = 1
-    for choice in choice_list:
-        title = choice['title']
-        if total_votes > 0:
-            progress_bar = get_progress_bar(len(choice['votes']), total_votes)
-        else:
-            progress_bar = '0.0%'
-        embed.add_field(
-            name=f'{count}. {title}', value=progress_bar, inline=False
-        )
-        count += 1
-    return embed
 
 
 class CreatePollModal(discord.ui.Modal):
@@ -77,7 +18,7 @@ class CreatePollModal(discord.ui.Modal):
             'choice_list': []
         }
 
-        embed = poll_embed(poll_info)
+        embed = embeds.poll_embed(poll_info)
         view = ConfigurePollView(poll_info)
         await interaction.response.send_message(
             embed=embed, view=view, ephemeral=True
@@ -96,7 +37,7 @@ class AddChoiceModal(discord.ui.Modal):
             {'title': self._title.value, 'votes': []}
         )
 
-        embed = poll_embed(self.poll_info)
+        embed = embeds.poll_embed(self.poll_info)
         view = ConfigurePollView(self.poll_info)
         await interaction.response.edit_message(embed=embed, view=view)
 
@@ -137,7 +78,7 @@ class RemoveButtonDropdown(discord.ui.Select):
         for value in self.values:
             self.poll_info['choice_list'].pop(int(value))
 
-        embed = poll_embed(self.poll_info)
+        embed = embeds.poll_embed(self.poll_info)
         view = ConfigurePollView(self.poll_info)
         await interaction.response.edit_message(embed=embed, view=view)
 
@@ -148,7 +89,7 @@ class GoBackButton(discord.ui.Button):
         self.poll_info = poll_info
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        embed = poll_embed(self.poll_info)
+        embed = embeds.poll_embed(self.poll_info)
         view = ConfigurePollView(self.poll_info)
         await interaction.response.edit_message(embed=embed, view=view)
 
@@ -170,7 +111,7 @@ class RemoveChoiceButton(discord.ui.Button):
         self.poll_info = poll_info
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        embed = poll_embed(self.poll_info)
+        embed = embeds.poll_embed(self.poll_info)
         view = RemoveChoiceView(self.poll_info)
         await interaction.response.edit_message(embed=embed, view=view)
 
@@ -183,6 +124,7 @@ class VotePollButton(discord.ui.Button):
         poll = mongo.Poll(interaction.message.id)
         poll_info = await poll.check()
 
+        title = poll_info['title']
         user_id = interaction.user.id
 
         user_list = []
@@ -191,18 +133,22 @@ class VotePollButton(discord.ui.Button):
             [user_list.append(user) for user in choice['votes']]
 
         if user_id in user_list:
-            content = 'You have already voted'
-            await interaction.response.send_message(content, ephemeral=True)
+            description = 'You have already voted'
+            embed = embeds.simple_embed(title, description)
+            await interaction.response.send_message(
+                embed=embed, ephemeral=True
+            )
             return
 
         choice_list[int(self.label) - 1]['votes'].append(user_id)
         await poll.update({'choice_list': choice_list})
 
-        embed = poll_embed(poll_info)
+        embed = embeds.poll_embed(poll_info)
         await interaction.message.edit(embed=embed)
 
-        content = 'Your vote has been registered'
-        await interaction.response.send_message(content, ephemeral=True)
+        description = 'Your vote has been registered'
+        embed = embeds.simple_embed(title, description)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 class VotePollView(discord.ui.View):
@@ -222,7 +168,7 @@ class PublishPollButton(discord.ui.Button):
         self.poll_info = poll_info
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        embed = poll_embed(self.poll_info)
+        embed = embeds.poll_embed(self.poll_info)
         view = VotePollView(self.poll_info['choice_list'])
         message = await interaction.channel.send(embed=embed, view=view)
         self.poll_info['_id'] = message.id
@@ -230,8 +176,10 @@ class PublishPollButton(discord.ui.Button):
         poll = mongo.Poll()
         await poll.create(self.poll_info)
 
-        content = 'Poll has been created'
-        await interaction.response.send_message(content, ephemeral=True)
+        title = self.poll_info['title']
+        description = 'Poll has been created'
+        embed = embeds.simple_embed(title, description)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 class ConfigurePollView(discord.ui.View):
@@ -250,7 +198,7 @@ class Polls(commands.GroupCog, group_name='polls'):
         self.bot = bot
 
     async def cog_load(self) -> None:
-        module_list = [mongo, formatting]
+        module_list = [mongo, embeds]
         for module in module_list:
             reload(module)
 
