@@ -7,6 +7,9 @@ from bot import Bot
 import discord
 
 
+embed_title = '{}\'s economy'
+
+
 class CheckBalanceButton(discord.ui.Button):
     def __init__(self) -> None:
         super().__init__(
@@ -22,7 +25,20 @@ class CheckBalanceButton(discord.ui.Button):
         guild = mongo.Guild(guild_id)
         guild_info = await guild.check()
 
-        emoji = guild_info.get('emoji', '')
+        guild_name = interaction.guild.name
+        title = embed_title.format(guild_name)
+
+        emoji = guild_info.get('emoji', None)
+        if emoji is None:
+            description = (
+                'An admin needs to set up the emoji that '
+                'will act as a coin first'
+            )
+            embed = embeds.simple_embed(title, description)
+            await interaction.response.send_message(
+                embed=embed, ephemeral=True
+            )
+            return
 
         user = mongo.User(user_id)
         user_info = await user.check()
@@ -31,9 +47,11 @@ class CheckBalanceButton(discord.ui.Button):
         guild_info = economy_dict.get(str(guild_id), {})
         balance = guild_info.get('balance', 0)
 
-        guild_name = interaction.guild.name
-        title = f'{guild_name}\'s economy'
-        description = f'Your balance is {balance} {emoji}'
+        coin_text = 'coin'
+        if balance > 1:
+            coin_text += 's'
+
+        description = f'Your balance is {balance} {coin_text}'
         embed = embeds.simple_embed(title, description)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -67,20 +85,36 @@ class GuildLeaderboardButton(discord.ui.Button):
 
         guild = mongo.Guild(interaction.guild_id)
         guild_info = await guild.check()
+
+        guild_name = interaction.guild.name
+        title = embed_title.format(guild_name)
+
         emoji = guild_info.get('emoji', None)
+        if emoji is None:
+            description = (
+                'An admin needs to set up the emoji that '
+                'will act as a coin first'
+            )
+            embed = embeds.simple_embed(title, description)
+            await interaction.response.send_message(
+                embed=embed, ephemeral=True
+            )
+            return
 
         leaderboard = sorted(
             user_list, key=lambda u: u['balance'], reverse=True
         )[:10]
 
-        guild_name = interaction.guild.name
-        title = f'{guild_name}\'s economy'
-
         description = ''
         for index in range(len(leaderboard)):
             user_id = leaderboard[index]['id']
             balance = leaderboard[index]['balance']
-            description += f'{index+1}. <@{user_id}>: {balance} {emoji}\n'
+
+            coin_text = 'coin'
+            if balance > 1:
+                coin_text += 's'
+
+            description += f'{index+1}. <@{user_id}>: {balance} {coin_text}\n'
 
         embed = embeds.simple_embed(title, description)
         await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -112,8 +146,13 @@ class Economy(commands.GroupCog, group_name='economy'):
     async def coin(self, interaction: discord.Interaction) -> None:
         """Set which emoji will act as coin"""
         await interaction.response.defer(ephemeral=True, thinking=True)
-        content = 'React with the emoji you want to use'
-        message = await interaction.channel.send(content)
+
+        guild_name = interaction.guild.name
+        title = embed_title.format(guild_name)
+
+        description = 'React with the emoji you want to use'
+        embed = embeds.simple_embed(title, description)
+        message = await interaction.channel.send(embed=embed)
 
         def check(reaction: discord.Reaction, user: discord.User) -> bool:
             return (
@@ -123,11 +162,12 @@ class Economy(commands.GroupCog, group_name='economy'):
 
         try:
             reaction = await self.bot.wait_for(
-                'reaction_add', check=check, timeout=90
+                'reaction_add', check=check, timeout=9
             )
         except TimeoutError:
-            content = 'No reaction was received'
-            await interaction.followup.send(content)
+            description = 'No reaction was received'
+            embed = embeds.simple_embed(title, description)
+            await interaction.followup.send(embed=embed)
             await message.delete()
             return
 
@@ -137,8 +177,9 @@ class Economy(commands.GroupCog, group_name='economy'):
         guild = mongo.Guild(interaction.guild_id)
         await guild.update({'emoji': emoji})
 
-        content = f'Emoji {emoji} has been set as coin'
-        await interaction.followup.send(content)
+        description = f'Emoji {emoji} has been set as coin'
+        embed = embeds.simple_embed(title, description)
+        await interaction.followup.send(embed=embed)
 
     @app_commands.command()
     async def panel(self, interaction: discord.Interaction) -> None:
@@ -146,14 +187,20 @@ class Economy(commands.GroupCog, group_name='economy'):
         guild = mongo.Guild(interaction.guild_id)
         guild_info = await guild.check()
 
-        emoji = guild_info.get('emoji', '')
-        if emoji == '':
-            content = 'Economy hasn\'t been configured yet'
-            await interaction.response.send_message(content, ephemeral=True)
+        guild_name = interaction.guild.name
+        title = embed_title.format(guild_name)
+
+        emoji = guild_info.get('emoji', None)
+        if emoji is None:
+            description = (
+                'You need to set up the emoji that will act as a coin first'
+            )
+            embed = embeds.simple_embed(title, description)
+            await interaction.response.send_message(
+                embed=embed, ephemeral=True
+            )
             return
 
-        guild_name = interaction.guild.name
-        title = f'{guild_name}\'s economy'
         description = (
             'You can give a coin to an user reacting to his '
             f'message with emoji {emoji}'
@@ -161,8 +208,10 @@ class Economy(commands.GroupCog, group_name='economy'):
         embed = embeds.simple_embed(title, description)
         view = EconomyPanelView()
         await interaction.channel.send(embed=embed, view=view)
-        content = 'Economy panel sent'
-        await interaction.response.send_message(content, ephemeral=True)
+
+        description = 'Economy panel sent'
+        embed = embeds.simple_embed(title, description)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     async def find_receiver(self, channel_id: int, message_id: int) -> int:
         channel = self.bot.get_channel(channel_id)
