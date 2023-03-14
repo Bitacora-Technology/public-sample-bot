@@ -1,10 +1,13 @@
 from discord.ext import commands
 from discord import app_commands
-from cogs.utils import formatting
+from cogs.utils import embeds
 from importlib import reload
 from asyncio import sleep
 from bot import Bot
 import discord
+
+
+embed_title = 'Support tickets'
 
 
 class OpenTicketButton(discord.ui.Button):
@@ -42,14 +45,16 @@ class OpenTicketButton(discord.ui.Button):
                 channel_name, overwrites=overwrites
             )
 
-            content = (
+            description = (
                 f'Thanks for reaching out, {user.mention}. We will '
                 'assist you as soon as we are available.'
             )
-            await channel.send(content)
+            embed = embeds.simple_embed(embed_title, description)
+            await channel.send(embed=embed)
 
-        content = f'You can find your ticket at {channel.mention}'
-        await interaction.response.send_message(content, ephemeral=True)
+        description = f'You can find your ticket at {channel.mention}'
+        embed = embeds.simple_embed(embed_title, description)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 class OpenTicketView(discord.ui.View):
@@ -66,7 +71,7 @@ class Tickets(commands.GroupCog, group_name='tickets'):
         self.category_name = 'Tickets'
 
     async def cog_load(self) -> None:
-        module_list = [formatting]
+        module_list = [embeds]
         for module in module_list:
             reload(module)
 
@@ -74,43 +79,37 @@ class Tickets(commands.GroupCog, group_name='tickets'):
         for view in view_list:
             self.bot.add_view(view)
 
-    def panel_embed(self) -> discord.Embed:
-        embed = discord.Embed(
-            title='Support Tickets',
-            description='Click the button bellow to open a ticket',
-            color=formatting.embed_color_dec
-        )
-
-        embed.set_footer(
-            text='https://bitacora.gg', icon_url=formatting.bot_avatar_url
-        )
-
-        return embed
-
     @app_commands.command()
     async def panel(self, interaction: discord.Interaction) -> None:
         """Send a ticket panel"""
-        embed = self.panel_embed()
+        description = 'Click the button bellow to open a ticket'
+        embed = embeds.simple_embed(embed_title, description)
         view = OpenTicketView()
         await interaction.channel.send(embed=embed, view=view)
-        content = 'Ticket panel sent'
-        await interaction.response.send_message(content, ephemeral=True)
+
+        description = 'Ticket panel sent'
+        embed = embeds.simple_embed(embed_title, description)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command()
     async def close(self, interaction: discord.Interaction) -> None:
         """Close the ticket"""
         category = interaction.channel.category
         if category is None or category.name != self.category_name:
-            content = (
+            description = (
                 'The command only works at the '
                 f'\'{self.category_name}\' category'
             )
-            await interaction.response.send_message(content, ephemeral=True)
+            embed = embeds.simple_embed(embed_title, description)
+            await interaction.response.send_message(
+                embed=embed, ephemeral=True
+            )
             return
 
         user = interaction.user
-        content = f'Closing ticket as requested by {user.mention}'
-        await interaction.response.send_message(content)
+        description = f'Closing ticket as requested by {user.mention}'
+        embed = embeds.simple_embed(embed_title, description)
+        await interaction.response.send_message(embed=embed)
 
         await sleep(5)
         await interaction.channel.delete()
