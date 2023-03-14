@@ -14,7 +14,7 @@ class Owner(commands.Cog):
     async def cog_check(self, ctx: commands.Context) -> bool:
         return await self.bot.is_owner(ctx.author)
 
-    @commands.command(name='cogs', hidden=True)
+    @commands.command()
     async def cogs(self, ctx: commands.Context) -> None:
         """Get the cog list"""
         cog_list = self.bot.cogs
@@ -22,7 +22,7 @@ class Owner(commands.Cog):
         await ctx.send(content, delete_after=self.delay)
         await ctx.message.delete(delay=self.delay)
 
-    @commands.command(name='update', hidden=True)
+    @commands.command()
     async def update(self, ctx: commands.Context) -> None:
         """Reload all extensions"""
         cog_list = [c for c in self.bot.cogs]
@@ -44,7 +44,7 @@ class Owner(commands.Cog):
                 log.info(f'Successfully reloaded extension {extension}')
         await ctx.message.delete(delay=self.delay)
 
-    @commands.command(name='load', hidden=True)
+    @commands.command()
     async def load(self, ctx: commands.Context, extension: str) -> None:
         """Loads a extension"""
         try:
@@ -63,7 +63,7 @@ class Owner(commands.Cog):
             log.info(f'Successfully loaded extension {extension}')
         await ctx.message.delete(delay=self.delay)
 
-    @commands.command(name='unload', hidden=True)
+    @commands.command()
     async def unload(self, ctx: commands.Context, extension: str) -> None:
         """Unloads a extension"""
         try:
@@ -82,7 +82,7 @@ class Owner(commands.Cog):
             log.info(f'Successfully unloaded extension {extension}')
         await ctx.message.delete(delay=self.delay)
 
-    @commands.command(name='reload', hidden=True)
+    @commands.command()
     async def reload(self, ctx: commands.Context, extension: str) -> None:
         """Reloads a extension"""
         try:
@@ -101,7 +101,7 @@ class Owner(commands.Cog):
             log.info(f'Successfully reloaded extension {extension}')
         await ctx.message.delete(delay=self.delay)
 
-    @commands.command(name='sync', hidden=True)
+    @commands.command()
     async def sync(self, ctx: commands.Context, target: str) -> None:
         """Syncs the slash commands"""
         if target == 'global':
