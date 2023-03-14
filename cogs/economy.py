@@ -64,7 +64,7 @@ class GuildLeaderboardButton(discord.ui.Button):
             user = leaderboard[index]
             user_id = user['id']
             balance = user['balance']
-            descripion += f'{index + 1}. <@{user_id}> - {balance} {emoji}\n'
+            descripion += f'{index + 1}. <@{user_id}>: {balance} {emoji}\n'
 
         embed = discord.Embed(
             title='Coin leaderboard',
