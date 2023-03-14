@@ -9,7 +9,8 @@ import discord
 class Users(commands.Cog):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
-        self.invite_url = (
+        self.server_invite = 'https://discord.gg/AV2F74vSDx'
+        self.bot_invite = (
             'https://discord.com/api/oauth2/authorize?client_id='
             '1085024816119156808&permissions=8&scope=bot%20'
             'applications.commands'
@@ -18,6 +19,8 @@ class Users(commands.Cog):
     @app_commands.command()
     async def help(self, interaction: discord.Interaction) -> None:
         """Get the most out of the bot"""
+        content = 'Work in progress'
+        await interaction.response.send_message(content, ephemeral=True)
 
     def simple_embed(self, title: str, description: str) -> discord.Embed:
         embed = discord.Embed(
@@ -50,9 +53,16 @@ class Users(commands.Cog):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command()
+    async def support(self, interaction: discord.Interaction) -> None:
+        """Do you have any question?"""
+        content = f'[[Click here]]({self.server_invite})'
+        embed = self.simple_embed('Support server', content)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @app_commands.command()
     async def invite(self, interaction: discord.Interaction) -> None:
         """Add the bot to your server"""
-        content = f'[[Click here]]({self.invite_url})'
+        content = f'[[Click here]]({self.bot_invite})'
         embed = self.simple_embed('Add bot', content)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
