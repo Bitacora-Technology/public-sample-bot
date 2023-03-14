@@ -1,6 +1,6 @@
 from discord.ext import commands
 from discord import app_commands
-from cogs.utils import mongo, formatting
+from cogs.utils import mongo, embeds
 from importlib import reload
 from bot import Bot
 import discord
@@ -10,10 +10,11 @@ import discord
 class Invites(commands.GroupCog, group_name='invites'):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
+        self.embed_title = '{}\'s invites'
         self.invites = {}
 
     async def cog_load(self) -> None:
-        module_list = [mongo, formatting]
+        module_list = [mongo, embeds]
         for module in module_list:
             reload(module)
 
@@ -30,17 +31,6 @@ class Invites(commands.GroupCog, group_name='invites'):
     async def on_ready(self) -> None:
         await self.check_global_invites()
 
-    def simple_embed(self, title: str, description: str) -> discord.Embed:
-        embed = discord.Embed(
-            title=title,
-            description=description,
-            color=formatting.embed_color_dec
-        )
-        embed.set_footer(
-            text='https://bitacora.gg', icon_url=formatting.bot_avatar_url
-        )
-        return embed
-
     @app_commands.command()
     async def get(self, interaction: discord.Interaction) -> None:
         """Get your own server invite"""
@@ -54,13 +44,15 @@ class Invites(commands.GroupCog, group_name='invites'):
         guild_info = guild_dict.get(guild_id, {})
         user_invite = guild_info.get('url', None)
 
+        user_name = interaction.user.name
+        title = self.embed_title.format(user_name)
+
         if bool(user_invite) is True:
             invite_list = await interaction.guild.invites()
             invite_exists = discord.utils.get(invite_list, url=user_invite)
             if bool(invite_exists) is True:
-                title = 'Invite'
-                content = f'<{user_invite}>'
-                embed = self.simple_embed(title, content)
+                description = f'<{user_invite}>'
+                embed = embeds.simple_embed(title, description)
                 await interaction.response.send_message(
                     embed=embed, ephemeral=True
                 )
@@ -72,9 +64,8 @@ class Invites(commands.GroupCog, group_name='invites'):
         await user.update(query)
         await self.check_global_invites()
 
-        title = 'Invite'
-        content = f'<{user_invite}>'
-        embed = self.simple_embed(title, content)
+        description = f'<{user_invite}>'
+        embed = embeds.simple_embed(title, description)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command()
@@ -90,14 +81,13 @@ class Invites(commands.GroupCog, group_name='invites'):
         guild_info = guild_dict.get(guild_id, {})
         invite_count = guild_info.get('count', 0)
 
-        if invite_count == 1:
-            users = 'user'
-        else:
-            users = 'users'
+        user_text = 'user'
+        if invite_count > 1:
+            user_text += 's'
 
         title = 'Stats'
-        content = f'You have invited {invite_count} {users}'
-        embed = self.simple_embed(title, content)
+        description = f'You have invited {invite_count} {user_text}'
+        embed = embeds.simple_embed(title, description)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     async def check_guild_invites(
