@@ -102,7 +102,7 @@ class Owner(commands.Cog):
         await ctx.message.delete(delay=self.delay)
 
     @commands.command()
-    async def sync(self, ctx: commands.Context, target: str) -> None:
+    async def sync(self, ctx: commands.Context, target: str = '') -> None:
         """Syncs the slash commands"""
         if target == 'global':
             guild = None
@@ -121,6 +121,29 @@ class Owner(commands.Cog):
             delete_after=self.delay
         )
         log.info(f'Successfully synced {len(commands_sync)} commands')
+        await ctx.message.delete(delay=self.delay)
+
+    @commands.command()
+    async def clear(self, ctx: commands.Context, target: str = '') -> None:
+        """Clears the slash commands"""
+        if target == 'global':
+            guild = None
+        elif target == 'guild':
+            guild = ctx.guild
+            self.bot.tree.copy_global_to(guild=guild)
+        else:
+            return await ctx.send(
+                'You need to specify the clear target',
+                delete_after=self.delay
+            )
+
+        self.bot.tree.clear_commands(guild=guild)
+        await self.bot.tree.sync(guild=guild)
+        await ctx.send(
+            'Successfully cleared commands',
+            delete_after=self.delay
+        )
+        log.info('Successfully cleared commands')
         await ctx.message.delete(delay=self.delay)
 
 
