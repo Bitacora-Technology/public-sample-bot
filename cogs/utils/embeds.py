@@ -32,3 +32,18 @@ def advanced_embed(embed_info: dict) -> discord.Embed:
         embed.add_field(name=field['name'], value=field['value'], inline=False)
 
     return embed
+
+
+def giveaway_embed(giveaway_info: dict) -> discord.Embed:
+    embed = simple_embed(giveaway_info['name'], None)
+
+    user_list = giveaway_info.get('user_list', [])
+    embed.add_field(name='Participants', value=len(user_list))
+
+    winners = giveaway_info['winners']
+    embed.add_field(name='Winners', value=winners)
+
+    timestamp = giveaway_info['end']
+    embed.add_field(name='Ends', value=f'<t:{timestamp}:R>')
+
+    return embed
