@@ -27,6 +27,7 @@ class Bot(commands.Bot):
 
     async def setup_hook(self) -> None:
         self.bot_app_info = await self.application_info()
+        self.help_command = None
 
         for extension in initial_extensions:
             try:
