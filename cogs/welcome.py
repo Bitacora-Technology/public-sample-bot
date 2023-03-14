@@ -1,6 +1,7 @@
 from discord.ext import commands
 from discord import app_commands
-from cogs.utils import mongo, formatting
+from cogs.utils import mongo, embeds
+from importlib import reload
 from bot import Bot
 import discord
 
@@ -10,37 +11,37 @@ import discord
 class Welcome(commands.GroupCog, group_name='welcome'):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
+        self.embed_title = '{}\'s welcome'
 
-    def simple_embed(self, description: str) -> discord.Embed:
-        embed = discord.Embed(
-            title='Welcome',
-            description=description,
-            color=formatting.embed_color_dec
-        )
-        embed.set_footer(
-            text='https://bitacora.gg', icon_url=formatting.bot_avatar_url
-        )
-        return embed
+    async def cog_load(self) -> None:
+        module_list = [mongo, embeds]
+        for module in module_list:
+            reload(module)
 
     @app_commands.command()
     async def enable(self, interaction: discord.Interaction) -> None:
         """Enable the welcome messages"""
         guild = mongo.Guild(interaction.guild_id)
         guild_info = await guild.check()
+
         welcome_info = guild_info.get('welcome', {})
         enabled = welcome_info.get('enabled', False)
 
+        guild_name = interaction.guild.name
+        title = self.embed_title.format(guild_name)
+
         if enabled is True:
-            content = 'Welcome messages are already enabled'
-            embed = self.simple_embed(content)
+            description = 'Welcome messages are already enabled'
+            embed = embeds.simple_embed(title, description)
             await interaction.response.send_message(
                 embed=embed, ephemeral=True
             )
             return
 
         await guild.update({'welcome.enabled': True})
-        content = 'Welcome messages have been enabled'
-        embed = self.simple_embed(content)
+
+        description = 'Welcome messages have been enabled'
+        embed = embeds.simple_embed(title, description)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command()
@@ -48,20 +49,24 @@ class Welcome(commands.GroupCog, group_name='welcome'):
         """Disable the welcome messages"""
         guild = mongo.Guild(interaction.guild_id)
         guild_info = await guild.check()
+
         welcome_info = guild_info.get('welcome', {})
         enabled = welcome_info.get('enabled', False)
 
+        guild_name = interaction.guild.name
+        title = self.embed_title.format(guild_name)
+
         if enabled is False:
-            content = 'Welcome messages are already disabled'
-            embed = self.simple_embed(content)
+            description = 'Welcome messages are already disabled'
+            embed = embed = embeds.simple_embed(title, description)
             await interaction.response.send_message(
                 embed=embed, ephemeral=True
             )
             return
 
         await guild.update({'welcome.enabled': False})
-        content = 'Welcome messages have been disabled'
-        embed = self.simple_embed(content)
+        description = 'Welcome messages have been disabled'
+        embed = embed = embeds.simple_embed(title, description)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command()
@@ -73,23 +78,12 @@ class Welcome(commands.GroupCog, group_name='welcome'):
         guild = mongo.Guild(interaction.guild_id)
         await guild.update({'welcome.channel': channel.id})
 
-        content = f'The channel {channel.mention} has been set'
-        await interaction.response.send_message(content, ephemeral=True)
+        guild_name = interaction.guild.name
+        title = self.embed_title.format(guild_name)
 
-    def member_embed(self, member: discord.Member) -> discord.Member:
-        embed = discord.Embed(
-            title='New Arrival',
-            color=formatting.embed_color_dec
-        )
-        embed.add_field(
-            name='Member', value=f'{member.name}#{member.discriminator}'
-        )
-        embed.set_footer(
-            text='https://bitacora.gg', icon_url=formatting.bot_avatar_url
-        )
-        embed.set_thumbnail(url=member.avatar)
-
-        return embed
+        description = f'The channel {channel.mention} has been set'
+        embed = embeds.simple_embed(title, description)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @commands.GroupCog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
@@ -107,7 +101,7 @@ class Welcome(commands.GroupCog, group_name='welcome'):
         if channel is None:
             channel = member.guild.fetch_channel(channel_id)
 
-        embed = self.member_embed(member)
+        embed = embeds.welcome_embed(member)
         await channel.send(embed=embed)
 
 
