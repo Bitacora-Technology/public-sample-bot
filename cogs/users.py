@@ -1,6 +1,7 @@
 from discord.ext import commands
 from discord import app_commands
 from cogs.utils import mongo, embeds
+from importlib import reload
 from bot import Bot
 import discord
 
@@ -15,6 +16,11 @@ class Users(commands.Cog):
             '1085024816119156808&permissions=8&scope=bot%20'
             'applications.commands'
         )
+
+    async def cog_load(self) -> None:
+        module_list = [mongo, embeds]
+        for module in module_list:
+            reload(module)
 
     @app_commands.command()
     async def help(self, interaction: discord.Interaction) -> None:
