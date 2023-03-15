@@ -17,6 +17,31 @@ emoji_dict = {
     '25': '<:25percent:1085029287754743878>'
 }
 
+help_dict = {
+    'Economy': (
+        'You can create an economy system in the community based in '
+        'message reactions'
+    ),
+    'Embeds': (
+        'You can send custom embeds easily with the integrated menu'
+    ),
+    'Giveaways': (
+        'You can create giveaways to give back to your community in a '
+        'randomized way'
+    ),
+    'Polls': (
+        'You can create polls to collect users feedback or make decisions'
+    ),
+    'Tickets': (
+        'You can send a panel where users can open private tickets to contact '
+        'with staff for help or support'
+    ),
+    'Welcome': (
+        'You can enable or disable receiving a notification in the selected '
+        'channel when someone joins the server'
+    )
+}
+
 
 def simple_embed(title: str, description: str) -> discord.Embed:
     embed = discord.Embed(
@@ -106,6 +131,15 @@ def poll_embed(poll_info: dict) -> discord.Embed:
 
         embed.add_field(name=title, value=progress_bar, inline=False)
         count += 1
+
+    return embed
+
+
+def help_embed() -> discord.Embed:
+    embed = simple_embed('Bitacora help', None)
+
+    for name, value in help_dict.items():
+        embed.add_field(name=name, value=value, inline=False)
 
     return embed
 
