@@ -38,6 +38,7 @@ class Owner(commands.Cog):
 
         content = f'{member_count} members from {len(guild_list)} guilds'
         await ctx.send(content, delete_after=self.delay)
+        await ctx.message.delete(delay=self.delay)
 
     @commands.command()
     async def cogs(self, ctx: commands.Context) -> None:
