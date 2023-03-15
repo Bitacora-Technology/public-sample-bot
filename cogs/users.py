@@ -25,8 +25,8 @@ class Users(commands.Cog):
     @app_commands.command()
     async def help(self, interaction: discord.Interaction) -> None:
         """Get the most out of the bot"""
-        content = 'Work in progress'
-        await interaction.response.send_message(content, ephemeral=True)
+        embed = embeds.help_embed()
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command()
     async def balance(self, interaction: discord.Interaction) -> None:
