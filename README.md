@@ -12,4 +12,3 @@ This is a public bot developed by [Bitacora](https://bitacora.gg).
  - [x] Welcome
  - [ ] Roles
  - [ ] Games
- - [x] Invites
