@@ -29,6 +29,17 @@ class Owner(commands.Cog):
         return await self.bot.is_owner(ctx.author)
 
     @commands.command()
+    async def stats(self, ctx: commands.Context) -> None:
+        """Get the bot stats"""
+        member_count = 0
+        guild_list = self.bot.guilds
+        for guild in guild_list:
+            member_count += guild.member_count
+
+        content = f'{member_count} members from {len(guild_list)} guilds'
+        await ctx.send(content, delete_after=self.delay)
+
+    @commands.command()
     async def cogs(self, ctx: commands.Context) -> None:
         """Get the cog list"""
         cog_list = self.bot.cogs
