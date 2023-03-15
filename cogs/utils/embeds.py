@@ -81,6 +81,22 @@ def giveaway_embed(giveaway_info: dict) -> discord.Embed:
     return embed
 
 
+def guild_embed(guild: discord.Guild) -> discord.Embed:
+    embed = simple_embed(guild.name, None)
+
+    embed.add_field(name='Identifier', value=guild.id, inline=False)
+
+    owner = guild.owner
+    user_name = f'{owner.name}#{owner.discriminator}'
+    embed.add_field(name='Owner', value=user_name, inline=False)
+
+    embed.add_field(name='Members', value=guild.member_count)
+
+    embed.set_thumbnail(url=guild.icon)
+
+    return embed
+
+
 def calculate_total_votes(choice_list: list) -> int:
     votes = 0
     for choice in choice_list:
