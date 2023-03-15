@@ -25,15 +25,32 @@ class Users(commands.Cog):
     @app_commands.command()
     async def balance(self, interaction: discord.Interaction) -> None:
         """Check your coin balance"""
+        guild_name = interaction.guild.name
+        title = f'{guild_name}\'s economy'
+
+        guild_id = interaction.guild_id
+        guild = mongo.Guild(guild_id)
+        guild_info = await guild.check()
+
+        emoji = guild_info.get('emoji', None)
+        if emoji is None:
+            description = (
+                'An admin needs to set up the emoji that '
+                'will act as a coin first'
+            )
+            embed = embeds.simple_embed(title, description)
+            await interaction.response.send_message(
+                embed=embed, ephemeral=True
+            )
+            return
+
         user = mongo.User(interaction.user.id)
         user_info = await user.check()
 
         economy_info = user_info.get('economy', {})
-        guild_economy = economy_info.get(str(interaction.guild_id), {})
+        guild_economy = economy_info.get(str(guild_id), {})
         balance = guild_economy.get('balance', 0)
 
-        guild_name = interaction.guild.name
-        title = f'{guild_name}\'s economy'
         description = f'Your balance is {balance} coins'
         embed = embeds.simple_embed(title, description)
         await interaction.response.send_message(embed=embed, ephemeral=True)
