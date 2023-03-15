@@ -1,4 +1,4 @@
-from discord.ext import commands
+from discord.ext import commands, tasks
 from cogs.utils import embeds
 from importlib import reload
 from bot import Bot
@@ -18,6 +18,12 @@ class Owner(commands.Cog):
         module_list = [embeds]
         for module in module_list:
             reload(module)
+
+        self.update_presence.start()
+
+    async def cog_unload(self) -> None:
+        if self.update_presence.is_running() is True:
+            self.update_presence.cancel()
 
     async def cog_check(self, ctx: commands.Context) -> bool:
         return await self.bot.is_owner(ctx.author)
@@ -162,6 +168,16 @@ class Owner(commands.Cog):
 
         embed = embeds.guild_embed(guild)
         await channel.send(embed=embed)
+
+    @tasks.loop(hours=12)
+    async def update_presence(self) -> None:
+        await self.bot.wait_until_ready()
+
+        guild_list = self.bot.guilds
+        name = f'{len(guild_list)} servers'
+        watching = discord.ActivityType.watching
+        activity = discord.Activity(type=watching, name=name)
+        await self.bot.change_presence(activity=activity)
 
 
 async def setup(bot: Bot) -> None:
