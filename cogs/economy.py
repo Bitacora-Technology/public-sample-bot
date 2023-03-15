@@ -33,7 +33,7 @@ class CheckBalanceButton(discord.ui.Button):
         balance = guild_economy.get('balance', 0)
 
         coin_text = 'coin'
-        if balance > 1:
+        if balance != 1:
             coin_text += 's'
 
         description = f'Your balance is {balance} {coin_text}'
@@ -81,10 +81,13 @@ class GuildLeaderboardButton(discord.ui.Button):
             balance = leaderboard[index]['balance']
 
             coin_text = 'coin'
-            if balance > 1:
+            if balance != 1:
                 coin_text += 's'
 
             description += f'{index+1}. <@{user_id}>: {balance} {coin_text}\n'
+
+        if description == '':
+            description = 'No user has received any coin'
 
         embed = embeds.simple_embed(title, description)
         await interaction.response.send_message(embed=embed, ephemeral=True)
