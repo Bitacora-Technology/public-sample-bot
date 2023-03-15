@@ -1,7 +1,9 @@
 from discord.ext import commands
-import logging
-
+from cogs.utils import embeds
+from importlib import reload
 from bot import Bot
+import logging
+import discord
 
 log = logging.getLogger(__name__)
 
@@ -10,6 +12,12 @@ class Owner(commands.Cog):
     def __init__(self, bot: Bot) -> None:
         self.bot = bot
         self.delay = 10  # Seconds to wait to delete a message
+        self.channel_id = 1085391909763158086
+
+    async def cog_load(self) -> None:
+        module_list = [embeds]
+        for module in module_list:
+            reload(module)
 
     async def cog_check(self, ctx: commands.Context) -> bool:
         return await self.bot.is_owner(ctx.author)
@@ -145,6 +153,15 @@ class Owner(commands.Cog):
         )
         log.info('Successfully cleared commands')
         await ctx.message.delete(delay=self.delay)
+
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild: discord.Guild) -> None:
+        channel = self.bot.get_channel(self.channel_id)
+        if channel is None:
+            channel = await self.bot.fetch_channel(self.channel_id)
+
+        embed = embeds.guild_embed(guild)
+        await channel.send(embed=embed)
 
 
 async def setup(bot: Bot) -> None:
