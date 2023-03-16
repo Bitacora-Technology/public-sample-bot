@@ -130,10 +130,9 @@ def get_progress_bar(choice: int, total_votes: int) -> str:
 
 
 def poll_embed(poll_info: dict) -> discord.Embed:
-    embed = simple_embed(poll_info['title'], None)
-
     choice_list = poll_info['choice_list']
     total_votes = calculate_total_votes(choice_list)
+    embed = simple_embed(poll_info['title'], f'Total votes: {total_votes}')
 
     count = 1
     for choice in choice_list:
