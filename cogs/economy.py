@@ -135,7 +135,7 @@ class Economy(commands.GroupCog, group_name='economy'):
 
         try:
             reaction = await self.bot.wait_for(
-                'reaction_add', check=check, timeout=9
+                'reaction_add', check=check, timeout=90
             )
         except TimeoutError:
             description = 'No reaction was received'
