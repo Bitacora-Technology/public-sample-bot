@@ -144,7 +144,9 @@ def poll_embed(poll_info: dict) -> discord.Embed:
         else:
             progress_bar = '0.0%'
 
-        embed.add_field(name=title, value=progress_bar, inline=False)
+        embed.add_field(
+            name=f'{count}. {title}', value=progress_bar, inline=False
+        )
         count += 1
 
     return embed
